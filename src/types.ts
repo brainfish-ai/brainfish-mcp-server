@@ -1,0 +1,147 @@
+export interface BrainfishSessionData {
+  apiToken?: string;
+  agentKey?: string;
+  [key: string]: unknown;
+}
+
+export interface BrainfishConfig {
+  baseUrl: string;
+  timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
+}
+
+export interface BrainfishError {
+  error: string;
+  message: string;
+  details?: Record<string, unknown>;
+  timestamp?: string;
+  requestId?: string;
+  validationErrors?: Array<{
+    field: string;
+    message: string;
+    code: string;
+  }>;
+}
+
+export interface Document {
+  id: string;
+  url: string;
+  urlId: string;
+  title: string;
+  text?: string;
+  summary?: string;
+  revision?: number;
+  collectionId: string;
+  parentDocumentId?: string;
+  template?: boolean;
+  templateId?: string;
+  fullWidth?: boolean;
+  siteEnabled?: boolean;
+  teamId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt?: string;
+  archivedAt?: string;
+  deletedAt?: string;
+  createdBy?: UserSummary;
+  updatedBy?: UserSummary;
+  isPublic?: boolean;
+  hasPendingSuggestion?: boolean;
+}
+
+export interface DocumentListItem {
+  id: string;
+  url: string;
+  urlId: string;
+  title: string;
+  summary?: string;
+  tasks?: {
+    completed: number;
+    total: number;
+  };
+  index: string;
+  createdAt: string;
+  createdBy?: string;
+  updatedAt: string;
+  updatedBy?: string;
+  publishedAt?: string;
+  archivedAt?: string;
+  deletedAt?: string;
+  teamId: string;
+  collectionId: string;
+  revision: number;
+  isPublic: boolean;
+  hasPendingSuggestion: boolean;
+}
+
+export interface UserSummary {
+  id?: string;
+  name?: string;
+  avatarUrl?: string;
+}
+
+export interface Collection {
+  id: string;
+  url: string;
+  urlId?: string;
+  name: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  index?: string;
+  permission?: 'read' | 'read_write';
+  sharing?: boolean;
+  siteEnabled?: boolean;
+  documents?: unknown[];
+  createdAt: string;
+  updatedAt: string;
+  deletedAt?: string;
+}
+
+export interface DocumentSuggestion {
+  id: string;
+  documentId: string;
+  title?: string;
+  text: string;
+  reason: string;
+  source?: string;
+  sourceId?: string;
+  createdAt: string;
+  acceptedAt?: string;
+  rejectedAt?: string;
+  staledAt?: string;
+}
+
+export interface SearchResult {
+  id: string;
+  title: string;
+  score: number;
+  percent: number;
+  chunk: string;
+  url: string;
+  collectionId: string;
+  isPublic: boolean;
+  lastUpdated?: string;
+}
+
+export interface StreamingEvent {
+  type: 'start' | 'progress' | 'content' | 'end';
+  id?: string;
+  conversationId?: string;
+  content?: string;
+  complete?: boolean;
+}
+
+export interface PaginationInfo {
+  offset?: number;
+  limit: number;
+  total: number;
+}
+
+export interface ApiResponse<T> {
+  data: T;
+  pagination?: PaginationInfo;
+  query?: string;
+  timestamp: string;
+}
