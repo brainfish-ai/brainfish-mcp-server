@@ -941,52 +941,113 @@ export async function GET(request: NextRequest) {
       margin-bottom: 1rem;
     }
 
-    /* Code block */
-    .code-block {
-      background: var(--surface);
-      border: 1px solid var(--border);
+    /* Monaco-style editor */
+    .monaco-editor {
       border-radius: var(--radius);
       overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,.45);
+      font-family: 'Consolas','Monaco','Menlo',monospace;
+      font-size: .8125rem;
+      line-height: 1.6;
+      border: 1px solid #3c3c3c;
     }
-    .code-header {
+    .monaco-titlebar {
+      background: #2d2d2d;
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      height: 35px;
+      border-bottom: 1px solid #1e1e1e;
+      gap: .5rem;
+    }
+    .monaco-dots { display: flex; gap: .375rem; align-items: center; }
+    .monaco-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+    }
+    .monaco-dot.red    { background: #ff5f57; }
+    .monaco-dot.yellow { background: #ffbd2e; }
+    .monaco-dot.green  { background: #28c840; }
+    .monaco-tabs {
+      display: flex;
+      background: #2d2d2d;
+      border-bottom: 1px solid #1e1e1e;
+    }
+    .monaco-tab {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .5rem 1rem;
+      font-size: .75rem;
+      color: #cccccc;
+      background: #1e1e1e;
+      border-right: 1px solid #3c3c3c;
+      border-top: 1px solid #a3e635;
+    }
+    .monaco-tab-icon { color: #e8c27a; font-size: .625rem; }
+    .monaco-body {
+      background: #1e1e1e;
+      display: flex;
+    }
+    .monaco-gutter {
+      background: #1e1e1e;
+      padding: 1rem 0;
+      min-width: 44px;
+      text-align: right;
+      user-select: none;
+      border-right: 1px solid #2d2d2d;
+    }
+    .monaco-gutter span {
+      display: block;
+      padding: 0 .75rem;
+      font-size: .75rem;
+      line-height: 1.6;
+      color: #4e4e4e;
+    }
+    .monaco-gutter span.active { color: #c6c6c6; }
+    .monaco-code {
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+      flex: 1;
+    }
+    pre {
+      margin: 0;
+      color: #d4d4d4;
+      line-height: 1.6;
+      white-space: pre;
+    }
+    .monaco-statusbar {
+      background: #007acc;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: .75rem 1rem;
-      border-bottom: 1px solid var(--border);
-      background: rgba(255,255,255,.03);
+      padding: 0 .875rem;
+      height: 22px;
     }
-    .code-lang {
+    .monaco-statusbar-left,
+    .monaco-statusbar-right {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      font-size: .6875rem;
+      color: rgba(255,255,255,.9);
+    }
+    .monaco-copy-btn {
       font-size: .6875rem;
       font-weight: 600;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      color: var(--text-dim);
-    }
-    .copy-btn {
-      font-size: .6875rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      background: none;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: .25rem .625rem;
+      color: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.1);
+      border: none;
+      border-radius: 3px;
+      padding: .1rem .5rem;
       cursor: pointer;
-      transition: color .15s, border-color .15s;
+      transition: background .15s;
     }
-    .copy-btn:hover { color: var(--brand); border-color: var(--brand); }
-    pre {
-      padding: 1.25rem;
-      font-family: 'SFMono-Regular', 'Consolas', 'Monaco', monospace;
-      font-size: .8125rem;
-      line-height: 1.7;
-      overflow-x: auto;
-      color: #e5e5e5;
-    }
-    .tok-key { color: #a3e635; }
-    .tok-str { color: #fbbf24; }
-    .tok-punc { color: #737373; }
-    .tok-comment { color: #525252; font-style: italic; }
+    .monaco-copy-btn:hover { background: rgba(255,255,255,.2); }
+    /* VS Code JSON token colors */
+    .tok-brace   { color: #d4d4d4; }
+    .tok-key     { color: #9cdcfe; }
+    .tok-str     { color: #ce9178; }
+    .tok-comment { color: #6a9955; font-style: italic; }
 
     /* Tool groups */
     .tool-groups { display: flex; flex-direction: column; gap: .625rem; }
@@ -1124,22 +1185,58 @@ export async function GET(request: NextRequest) {
 <main>
   <div class="section">
     <div class="section-label">Quick setup</div>
-    <div class="code-block">
-      <div class="code-header">
-        <span class="code-lang">JSON — Cursor / Claude Desktop</span>
-        <button class="copy-btn" onclick="const t=this.closest('.code-block').querySelector('pre').innerText;navigator.clipboard.writeText(t).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500)})">Copy</button>
+    <div class="monaco-editor">
+      <div class="monaco-titlebar">
+        <div class="monaco-dots">
+          <span class="monaco-dot red"></span>
+          <span class="monaco-dot yellow"></span>
+          <span class="monaco-dot green"></span>
+        </div>
       </div>
-      <pre><span class="tok-punc">{</span>
-  <span class="tok-key">"mcpServers"</span><span class="tok-punc">: {</span>
-    <span class="tok-key">"brainfish"</span><span class="tok-punc">: {</span>
-      <span class="tok-key">"url"</span><span class="tok-punc">:</span> <span class="tok-str">"https://mcp.brainfi.sh"</span><span class="tok-punc">,</span>
-      <span class="tok-key">"headers"</span><span class="tok-punc">: {</span>
-        <span class="tok-key">"Authorization"</span><span class="tok-punc">:</span> <span class="tok-str">"Bearer bf_api_YOUR_TOKEN"</span><span class="tok-punc">,</span>
-        <span class="tok-key">"agent-key"</span><span class="tok-punc">:</span>     <span class="tok-str">"YOUR_AGENT_KEY"</span>  <span class="tok-comment">// optional</span>
-      <span class="tok-punc">}</span>
-    <span class="tok-punc">}</span>
-  <span class="tok-punc">}</span>
-<span class="tok-punc">}</span></pre>
+      <div class="monaco-tabs">
+        <div class="monaco-tab">
+          <span class="monaco-tab-icon">&#9632;</span>
+          mcp.json
+        </div>
+      </div>
+      <div class="monaco-body">
+        <div class="monaco-gutter">
+          <span class="active">1</span>
+          <span>2</span>
+          <span>3</span>
+          <span>4</span>
+          <span>5</span>
+          <span>6</span>
+          <span>7</span>
+          <span>8</span>
+          <span>9</span>
+          <span>10</span>
+          <span>11</span>
+        </div>
+        <div class="monaco-code">
+          <pre><span class="tok-brace">{</span>
+  <span class="tok-key">"mcpServers"</span><span class="tok-brace">: {</span>
+    <span class="tok-key">"brainfish"</span><span class="tok-brace">: {</span>
+      <span class="tok-key">"url"</span><span class="tok-brace">:</span> <span class="tok-str">"https://mcp.brainfi.sh"</span><span class="tok-brace">,</span>
+      <span class="tok-key">"headers"</span><span class="tok-brace">: {</span>
+        <span class="tok-key">"Authorization"</span><span class="tok-brace">:</span> <span class="tok-str">"Bearer bf_api_YOUR_TOKEN"</span><span class="tok-brace">,</span>
+        <span class="tok-key">"agent-key"</span><span class="tok-brace">:</span>     <span class="tok-str">"YOUR_AGENT_KEY"</span>  <span class="tok-comment">// optional</span>
+      <span class="tok-brace">}</span>
+    <span class="tok-brace">}</span>
+  <span class="tok-brace">}</span>
+<span class="tok-brace">}</span></pre>
+        </div>
+      </div>
+      <div class="monaco-statusbar">
+        <div class="monaco-statusbar-left">
+          <span>&#10003; mcp.json</span>
+          <span>JSON</span>
+        </div>
+        <div class="monaco-statusbar-right">
+          <span>Ln 1, Col 1</span>
+          <button class="monaco-copy-btn" onclick="const code=this.closest('.monaco-editor').querySelector('pre').innerText;navigator.clipboard.writeText(code).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500)})">Copy</button>
+        </div>
+      </div>
     </div>
   </div>
 
