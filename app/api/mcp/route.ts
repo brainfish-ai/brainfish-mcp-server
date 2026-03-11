@@ -8,18 +8,34 @@ function extractBrainfishCredentials(request: NextRequest): {
 } {
   const authHeader = request.headers.get('authorization');
   const apiKeyHeader = request.headers.get('x-brainfish-api-key') || request.headers.get('x-api-key');
-  const agentKey = request.headers.get('agent-key') || undefined;
+  const agentKeyHeader = request.headers.get('agent-key') || undefined;
 
   let apiToken: string | undefined;
+  let oauthAgentKey: string | undefined;
 
   if (apiKeyHeader) {
     apiToken = apiKeyHeader;
   } else if (authHeader?.toLowerCase().startsWith('bearer ')) {
-    apiToken = authHeader.slice(7).trim();
+    const bearer = authHeader.slice(7).trim();
+    // Try to decode OAuth access token (base64url JSON with {token, agentKey})
+    try {
+      const decoded = JSON.parse(Buffer.from(bearer, 'base64url').toString('utf8'));
+      if (decoded?.token) {
+        apiToken = decoded.token;
+        oauthAgentKey = decoded.agentKey;
+      } else {
+        apiToken = bearer; // raw API key (Cursor / direct header usage)
+      }
+    } catch {
+      apiToken = bearer; // raw API key
+    }
   }
 
-  return { apiToken, agentKey };
+  return { apiToken, agentKey: agentKeyHeader ?? oauthAgentKey };
 }
+
+const WWW_AUTHENTICATE =
+  'Bearer realm="Brainfish MCP", resource_metadata="https://mcp.brainfi.sh/.well-known/oauth-authorization-server"';
 
 function createBrainfishClient(session: BrainfishSessionData): BrainfishClient {
   if (!session.apiToken) {
@@ -597,6 +613,21 @@ async function handleResourceRead(uri: string, request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // OAuth 2.1: return 401 with discovery hint when no credentials provided
+  const { apiToken } = extractBrainfishCredentials(request);
+  if (!apiToken) {
+    return new NextResponse(
+      JSON.stringify({ jsonrpc: '2.0', error: { code: -32001, message: 'Authentication required' } }),
+      {
+        status: 401,
+        headers: {
+          'Content-Type': 'application/json',
+          'WWW-Authenticate': WWW_AUTHENTICATE,
+        },
+      }
+    );
+  }
+
   try {
     const body: MCPRequest = await request.json();
 
@@ -941,6 +972,94 @@ export async function GET(request: NextRequest) {
       margin-bottom: 1rem;
     }
 
+    /* Setup tabs */
+    .setup-tabs {
+      display: flex;
+      gap: .25rem;
+      margin-bottom: .875rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: .25rem;
+      width: fit-content;
+    }
+    .setup-tab {
+      font-size: .8125rem;
+      font-weight: 500;
+      padding: .375rem 1rem;
+      border-radius: 9999px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background .15s, color .15s;
+    }
+    .setup-tab.active { background: var(--brand); color: #171717; font-weight: 600; }
+    .setup-panel { display: none; }
+    .setup-panel.active { display: block; }
+
+    /* Claude steps */
+    .claude-setup { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .claude-steps { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    .claude-step { display: flex; gap: 1rem; align-items: flex-start; }
+    .step-num {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: var(--brand-dim);
+      border: 1px solid rgba(163,230,53,.3);
+      color: var(--brand);
+      font-size: .75rem;
+      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: .1rem;
+    }
+    .step-body { flex: 1; }
+    .step-title { font-size: .875rem; font-weight: 600; color: var(--text); margin-bottom: .375rem; }
+    .step-desc { font-size: .8125rem; color: var(--text-muted); line-height: 1.55; }
+    .step-desc a { color: var(--brand); text-decoration: none; }
+    .step-desc a:hover { text-decoration: underline; }
+    .step-desc strong { color: var(--text); }
+    .claude-url-block {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: #1e1e1e;
+      border: 1px solid #3c3c3c;
+      border-radius: 8px;
+      padding: .75rem 1rem;
+      margin-top: .625rem;
+      cursor: pointer;
+      font-family: 'Consolas','Monaco',monospace;
+      font-size: .8125rem;
+      color: #d4d4d4;
+      transition: border-color .15s;
+    }
+    .claude-url-block:hover { border-color: var(--brand); }
+    .url-token { color: #ce9178; }
+    .url-copy { font-size: .6875rem; font-weight: 600; color: var(--text-dim); white-space: nowrap; flex-shrink: 0; }
+    .inline-code {
+      font-family: 'Consolas','Monaco',monospace;
+      font-size: .75rem;
+      background: rgba(255,255,255,.07);
+      padding: .1rem .4rem;
+      border-radius: 4px;
+      color: #9cdcfe;
+    }
+    .claude-note {
+      display: flex;
+      align-items: flex-start;
+      gap: .5rem;
+      padding: .875rem 1.5rem;
+      background: rgba(255,255,255,.02);
+      border-top: 1px solid var(--border);
+      font-size: .75rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+    .claude-note svg { flex-shrink: 0; margin-top: .1rem; color: var(--text-dim); }
+
     /* Monaco-style editor */
     .monaco-editor {
       border-radius: var(--radius);
@@ -1185,6 +1304,13 @@ export async function GET(request: NextRequest) {
 <main>
   <div class="section">
     <div class="section-label">Quick setup</div>
+
+    <div class="setup-tabs">
+      <button class="setup-tab active" onclick="switchTab(this,'cursor')">Cursor / Claude Desktop</button>
+      <button class="setup-tab" onclick="switchTab(this,'claude')">Claude.ai Web</button>
+    </div>
+
+    <div id="setup-cursor" class="setup-panel active">
     <div class="monaco-editor">
       <div class="monaco-titlebar">
         <div class="monaco-dots">
@@ -1237,8 +1363,46 @@ export async function GET(request: NextRequest) {
           <button class="monaco-copy-btn" onclick="const code=this.closest('.monaco-editor').querySelector('pre').innerText;navigator.clipboard.writeText(code).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500)})">Copy</button>
         </div>
       </div>
+      </div>
     </div>
-  </div>
+    </div><!-- end setup-cursor -->
+
+    <div id="setup-claude" class="setup-panel">
+      <div class="claude-setup">
+        <div class="claude-steps">
+          <div class="claude-step">
+            <span class="step-num">1</span>
+            <div class="step-body">
+              <div class="step-title">Open Claude.ai → Settings → Integrations</div>
+              <div class="step-desc">Go to <a href="https://claude.ai/settings/integrations" target="_blank" rel="noopener">claude.ai/settings/integrations</a> and click <strong>Add custom connector</strong>.</div>
+            </div>
+          </div>
+          <div class="claude-step">
+            <span class="step-num">2</span>
+            <div class="step-body">
+              <div class="step-title">Enter a name and URL with your token</div>
+              <div class="step-desc">Claude.ai doesn't support custom headers, so pass your API token directly in the URL:</div>
+              <div class="claude-url-block" onclick="navigator.clipboard.writeText('https://mcp.brainfi.sh?token=bf_api_YOUR_TOKEN').then(()=>{this.querySelector('.url-copy').textContent='Copied!';setTimeout(()=>{this.querySelector('.url-copy').textContent='copy'},1500)})">
+                <code>https://mcp.brainfi.sh?token=<span class="url-token">bf_api_YOUR_TOKEN</span></code>
+                <span class="url-copy">copy</span>
+              </div>
+              <div class="step-desc" style="margin-top:.5rem">Optionally append <code class="inline-code">&amp;agent-key=YOUR_AGENT_KEY</code> if using AI Answers.</div>
+            </div>
+          </div>
+          <div class="claude-step">
+            <span class="step-num">3</span>
+            <div class="step-body">
+              <div class="step-title">Click Add — that's it</div>
+              <div class="step-desc">No OAuth required. Claude will immediately discover all 22 Brainfish tools.</div>
+            </div>
+          </div>
+        </div>
+        <div class="claude-note">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          Credentials are embedded in the URL on your device only. Use a token with the minimum permissions your workflow needs.
+        </div>
+      </div>
+    </div><!-- end setup-claude -->
 
   <div class="section">
     <div class="section-label">${Object.keys(TOOLS).length} available tools across ${Object.keys(toolGroups).length} categories</div>
@@ -1255,6 +1419,14 @@ export async function GET(request: NextRequest) {
   <p>Built by <a href="https://brainfi.sh" target="_blank" rel="noopener">Brainfish</a> · <a href="https://github.com/brainfish-ai/brainfish-mcp-server" target="_blank" rel="noopener">Open source on GitHub</a></p>
 </footer>
 
+<script>
+function switchTab(btn, panel) {
+  document.querySelectorAll('.setup-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.setup-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('setup-' + panel).classList.add('active');
+}
+</script>
 </body>
 </html>`;
     return new NextResponse(html, {

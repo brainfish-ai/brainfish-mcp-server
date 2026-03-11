@@ -8,6 +8,7 @@
     "NODE_ENV": "production"
   },
   "rewrites": [
+    { "source": "/.well-known/oauth-authorization-server", "destination": "/api/oauth/metadata" },
     { "source": "/", "destination": "/api/mcp" }
   ],
   "headers": [

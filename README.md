@@ -1,6 +1,6 @@
 # Brainfish MCP Server
 
-A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for [Brainfish](https://brainfi.sh) — giving AI assistants in Cursor, Claude Desktop, VS Code, and other MCP-compatible tools direct access to your Brainfish knowledge base.
+A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for [Brainfish](https://brainfi.sh) — giving AI assistants in Cursor, Claude, VS Code, and other MCP-compatible tools direct access to your Brainfish knowledge base.
 
 **Endpoint:** `https://mcp.brainfi.sh`
 
@@ -8,7 +8,17 @@ A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for [Br
 
 ## Quick Start
 
-No installation required. Add the following to your MCP client configuration and you're ready to go.
+### Claude.ai Web (OAuth 2.1 — recommended)
+
+Go to **[claude.ai/settings/integrations](https://claude.ai/settings/integrations)** → **Add custom connector**:
+
+1. **Name:** `Brainfish`
+2. **URL:** `https://mcp.brainfi.sh`
+3. Click **Add** → a browser window opens → enter your Brainfish API token → **Authorize**
+
+Claude handles the full OAuth flow. No manual token pasting required.
+
+---
 
 ### Cursor
 
@@ -21,7 +31,7 @@ Go to **Settings → Features → MCP Servers → Add new global MCP server**:
       "url": "https://mcp.brainfi.sh",
       "headers": {
         "Authorization": "Bearer bf_api_YOUR_TOKEN",
-        "agent-key": "your-agent-key"
+        "agent-key": "YOUR_AGENT_KEY"
       }
     }
   }
@@ -39,14 +49,14 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
       "url": "https://mcp.brainfi.sh",
       "headers": {
         "Authorization": "Bearer bf_api_YOUR_TOKEN",
-        "agent-key": "your-agent-key"
+        "agent-key": "YOUR_AGENT_KEY"
       }
     }
   }
 }
 ```
 
-### VS Code
+### VS Code Copilot
 
 Add to your User Settings (JSON):
 
@@ -59,7 +69,7 @@ Add to your User Settings (JSON):
         "url": "https://mcp.brainfi.sh",
         "headers": {
           "Authorization": "Bearer bf_api_YOUR_TOKEN",
-          "agent-key": "your-agent-key"
+          "agent-key": "YOUR_AGENT_KEY"
         }
       }
     }
@@ -73,32 +83,66 @@ Add to your User Settings (JSON):
 
 | Credential | Where to find it |
 |---|---|
-| `Authorization` | [Brainfish Dashboard](https://app.brainfi.sh) → Settings → API Tokens → create a token starting with `bf_api_` |
-| `agent-key` | [Brainfish Dashboard](https://app.brainfi.sh) → Agents → click any agent to copy its key |
+| `bf_api_YOUR_TOKEN` | [Brainfish Dashboard](https://app.brainfi.sh) → Settings → API Tokens |
+| `YOUR_AGENT_KEY` | [Brainfish Dashboard](https://app.brainfi.sh) → Agents → click any agent to copy its key |
 
-The `agent-key` is only required for AI answer generation tools (`brainfish_generate_answer`, `brainfish_generate_follow_ups`). All other tools work with the API token alone.
+> **`agent-key` is only required** for AI answer tools (`brainfish_generate_answer`, `brainfish_generate_follow_ups`). All other tools work with the API token alone.
+
+---
+
+## Authentication
+
+The server supports two authentication methods:
+
+### OAuth 2.1 (Claude.ai web, automatic)
+
+The server implements the full [MCP OAuth 2.1 spec](https://modelcontextprotocol.io/specification/2025-03-26/basic/authorization):
+
+| Endpoint | URL |
+|---|---|
+| Discovery | `https://mcp.brainfi.sh/.well-known/oauth-authorization-server` |
+| Authorization | `https://mcp.brainfi.sh/authorize` |
+| Token | `https://mcp.brainfi.sh/token` |
+| Registration | `https://mcp.brainfi.sh/register` |
+
+When Claude.ai calls the MCP server without credentials it receives a `401` with a `WWW-Authenticate` header pointing to the discovery document. Claude then opens the `/authorize` page in a browser where you enter your Brainfish API token once. The server issues a Bearer token that Claude stores and re-uses.
+
+**No database or server-side secrets are involved.** Credentials are encoded inside the tokens themselves (stateless, PKCE-verified).
+
+### Bearer Token (Cursor, Claude Desktop, VS Code)
+
+Pass your API token directly in the `Authorization` header:
+
+```
+Authorization: Bearer bf_api_YOUR_TOKEN
+```
 
 ---
 
 ## Available Tools (22)
 
-### Authentication
-| Tool | Description |
-|---|---|
-| `brainfish_validate_token` | Validate your API token and return user/team info |
+### Search & Documents
 
-### Documents
 | Tool | Description |
 |---|---|
 | `brainfish_search_documents` | Semantic search across your knowledge base |
-| `brainfish_list_documents` | List documents with filtering and pagination |
 | `brainfish_get_document` | Get full document content by ID or URL slug |
+| `brainfish_list_documents` | List documents with filtering and pagination |
 | `brainfish_create_document` | Create a new document in a collection |
 | `brainfish_update_document` | Update title, content, or publish status |
 | `brainfish_delete_document` | Soft-delete (or permanently delete) a document |
+
+### Suggestions
+
+| Tool | Description |
+|---|---|
+| `brainfish_suggest_document_changes` | Propose edits to an existing document (goes through review) |
+| `brainfish_suggest_new_document` | Suggest a new document for creation |
+| `brainfish_update_suggestion` | Update a pending suggestion before review |
 | `brainfish_generate_article_suggestion` | Trigger AI-powered article suggestions from content (async) |
 
 ### Collections
+
 | Tool | Description |
 |---|---|
 | `brainfish_list_collections` | List all accessible collections |
@@ -107,26 +151,27 @@ The `agent-key` is only required for AI answer generation tools (`brainfish_gene
 | `brainfish_update_collection` | Update collection name, description, visibility |
 | `brainfish_delete_collection` | Delete a collection and all its documents |
 
-### AI Agents
+### AI & Answers
+
 | Tool | Description |
 |---|---|
 | `brainfish_generate_answer` | Generate an AI answer from your knowledge base (requires agent-key) |
-| `brainfish_generate_follow_ups` | Generate follow-up questions for a completed conversation (requires agent-key) |
+| `brainfish_generate_follow_ups` | Generate follow-up questions for a conversation (requires agent-key) |
 
 ### Catalogs
+
 | Tool | Description |
 |---|---|
-| `brainfish_list_catalogs` | List all catalogs, with optional source/status filtering |
-| `brainfish_create_catalog` | Create a new catalog |
+| `brainfish_list_catalogs` | List all catalogs with optional filtering |
 | `brainfish_get_catalog` | Get catalog details and content count |
+| `brainfish_create_catalog` | Create a new catalog |
 | `brainfish_sync_catalog_content` | Full sync of content files to a catalog |
 
-### Document Suggestions (internal workflow)
+### Auth
+
 | Tool | Description |
 |---|---|
-| `brainfish_suggest_document_changes` | Propose edits to an existing document (goes through review) |
-| `brainfish_suggest_new_document` | Suggest a new document for creation |
-| `brainfish_update_suggestion` | Update a pending suggestion before review |
+| `brainfish_validate_token` | Validate your API token and return user/team info |
 
 ---
 
@@ -144,38 +189,19 @@ Resources provide read-only, referenceable content via `brainfish://` URIs:
 
 ---
 
-## Example Usage
+## Example Prompts
 
-### Answer a question from your knowledge base
 ```
 "Use Brainfish to answer: how do I reset my password?"
 ```
-
-### Find and update a document
 ```
 "Search Brainfish for our API authentication guide and update it with the new OAuth steps"
 ```
-
-### Create new content
 ```
 "Create a new document in the Help Center collection about webhook setup"
 ```
-
-### Sync external content to a catalog
-```json
-{
-  "name": "brainfish_sync_catalog_content",
-  "arguments": {
-    "id": "your-catalog-uuid",
-    "files": [
-      {
-        "url": "https://docs.yoursite.com/getting-started",
-        "title": "Getting Started",
-        "content": "# Getting Started\n\nWelcome..."
-      }
-    ]
-  }
-}
+```
+"List all collections in my Brainfish workspace"
 ```
 
 ---
@@ -184,7 +210,8 @@ Resources provide read-only, referenceable content via `brainfish://` URIs:
 
 | HTTP Code | Error | Meaning |
 |---|---|---|
-| 401 | `authentication_required` | Missing or invalid API token / agent key |
+| 401 | `authentication_required` | Missing or invalid API token |
+| 403 | `forbidden` | Token lacks permission for this resource |
 | 404 | `not_found` | Resource does not exist |
 | 409 | `conflict` | Duplicate request (article suggestions cached for 5 min) |
 | 422 | `validation_failed` | Invalid request parameters |
@@ -197,11 +224,11 @@ Responses include a `requestId` you can share with Brainfish support for debuggi
 
 ## Self-Hosting
 
-The server is a Next.js app. Deploy your own instance:
+The server is a Next.js app deployable to Vercel with zero configuration:
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbrainfish-ai%2Fbrainfish-mcp-server)
 
-Credentials are passed per-request via HTTP headers — no environment variables required on the server.
+No environment variables required — credentials are passed per-request.
 
 ---
 
