@@ -9,7 +9,11 @@ import type {
   Collection,
   DocumentSuggestion,
   SearchResult,
-  StreamingEvent
+  StreamingEvent,
+  Catalog,
+  SyncContentFile,
+  SyncContentResult,
+  ArticleSuggestionTask
 } from './types.js';
 
 export class BrainfishClient {
@@ -248,6 +252,68 @@ export class BrainfishClient {
   async deleteCollection(id: string): Promise<ApiResponse<{ success: boolean }>> {
     return this.request(`/v1/collections/${encodeURIComponent(id)}`, {
       method: 'DELETE'
+    });
+  }
+
+  // Catalogs
+  async listCatalogs(params: {
+    source?: string;
+    status?: 'inprogress' | 'completed' | 'failed';
+    limit?: number;
+    offset?: number;
+  } = {}): Promise<ApiResponse<Catalog[]>> {
+    const searchParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        searchParams.append(key, String(value));
+      }
+    });
+    const queryString = searchParams.toString();
+    const endpoint = queryString ? `/v1/catalogs?${queryString}` : '/v1/catalogs';
+    return this.request(endpoint);
+  }
+
+  async createCatalog(params: {
+    name: string;
+    source: string;
+    slug?: string;
+    configurations?: Record<string, unknown>;
+  }): Promise<ApiResponse<Catalog>> {
+    return this.request('/v1/catalogs', {
+      method: 'POST',
+      body: params
+    });
+  }
+
+  async getCatalog(id: string): Promise<ApiResponse<Catalog>> {
+    return this.request(`/v1/catalogs/${encodeURIComponent(id)}`);
+  }
+
+  async syncCatalogContent(id: string, files: SyncContentFile[]): Promise<ApiResponse<SyncContentResult>> {
+    return this.request(`/v1/catalogs/${encodeURIComponent(id)}/content`, {
+      method: 'POST',
+      body: { files }
+    });
+  }
+
+  // Conversations
+  async generateFollowUpQuestions(conversationId: string, limit?: number): Promise<ApiResponse<{ followUps: string[] }>> {
+    return this.request(`/v1/conversations/${encodeURIComponent(conversationId)}/follow-ups`, {
+      method: 'POST',
+      body: limit !== undefined ? { limit } : {},
+      requiresAgentKey: true
+    });
+  }
+
+  // Article Suggestions (async, AI-driven)
+  async generateArticleSuggestion(params: {
+    content: string;
+    collection_id?: string;
+    new_article?: boolean;
+  }): Promise<ApiResponse<ArticleSuggestionTask>> {
+    return this.request('/v1/documents/suggestion', {
+      method: 'POST',
+      body: params
     });
   }
 

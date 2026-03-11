@@ -145,3 +145,41 @@ export interface ApiResponse<T> {
   query?: string;
   timestamp: string;
 }
+
+export interface Catalog {
+  id: string;
+  teamId?: string;
+  name: string;
+  source: string;
+  status: 'inprogress' | 'completed' | 'failed';
+  enabled?: boolean;
+  dailySync?: boolean;
+  configurations?: Record<string, unknown>;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  lastSyncError?: string;
+  contentCount?: number;
+}
+
+export interface SyncContentFile {
+  url: string;
+  content: string;
+  title: string;
+}
+
+export interface SyncContentResult {
+  id: string;
+  name: string;
+  source: string;
+  status: string;
+  contentCount: number;
+  created: number;
+  updated: number;
+  removed: number;
+}
+
+export interface ArticleSuggestionTask {
+  task_id: string;
+  status: string;
+}
