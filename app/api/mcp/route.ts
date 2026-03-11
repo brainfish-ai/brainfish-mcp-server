@@ -49,7 +49,7 @@ function handleBrainfishError(error: unknown) {
 // MCP Protocol Implementation
 interface MCPRequest {
   jsonrpc: '2.0';
-  id: string | number;
+  id?: string | number | null;
   method: string;
   params?: any;
 }
@@ -599,6 +599,11 @@ async function handleResourceRead(uri: string, request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body: MCPRequest = await request.json();
+
+    // JSON-RPC 2.0: notifications have no `id`. Servers MUST NOT respond to them.
+    if (body.id === undefined || body.id === null) {
+      return new NextResponse(null, { status: 202 });
+    }
     
     // Handle different MCP methods
     switch (body.method) {
@@ -701,7 +706,7 @@ export async function POST(request: NextRequest) {
             code: -32601,
             message: `Method not found: ${body.method}`
           }
-        }, { status: 400 });
+        });
     }
   } catch (error) {
     console.error('MCP Server Error:', error);
