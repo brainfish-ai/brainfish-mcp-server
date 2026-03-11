@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "brainfish": {
+      "url": "https://mcp.brainfi.sh/api/mcp",
+      "headers": {
+        "Authorization": "Bearer bf_api_YOUR_TOKEN",
+        "agent-key": "your-agent-key"
+      }
+    }
+  }
+}
