@@ -717,66 +717,377 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const accept = request.headers.get('accept') ?? '';
   if (accept.includes('text/html')) {
-    const toolList = Object.keys(TOOLS).map(t => `<li><code>${t}</code></li>`).join('');
+    const tools = Object.keys(TOOLS);
+    const toolCards = tools.map(t => {
+      const label = t.replace('brainfish_', '').replace(/_/g, ' ');
+      return `<div class="tool-card"><span class="tool-name">${label}</span></div>`;
+    }).join('');
+
     const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Brainfish MCP Server</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
-    .card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:680px;width:100%;padding:2.5rem}
-    h1{font-size:1.75rem;font-weight:700;margin-bottom:.5rem}
-    .subtitle{color:#64748b;margin-bottom:2rem}
-    .badge{display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:.75rem;font-weight:600;padding:.25rem .75rem;border-radius:9999px;margin-bottom:2rem}
-    h2{font-size:1rem;font-weight:600;margin-bottom:.75rem;color:#374151}
-    .endpoint{background:#0f172a;color:#86efac;font-family:monospace;padding:1rem 1.25rem;border-radius:10px;font-size:.875rem;margin-bottom:2rem;word-break:break-all}
-    .config{background:#0f172a;color:#e2e8f0;font-family:monospace;font-size:.75rem;padding:1.25rem;border-radius:10px;white-space:pre;overflow-x:auto;margin-bottom:2rem}
-    .tools{columns:2;gap:1rem;margin-bottom:2rem}
-    .tools li{font-family:monospace;font-size:.75rem;color:#475569;list-style:none;padding:.2rem 0}
-    .tools code{background:#f1f5f9;padding:.1rem .35rem;border-radius:4px}
-    .links{display:flex;gap:1rem;flex-wrap:wrap}
-    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.1rem;border-radius:8px;font-size:.875rem;font-weight:500;text-decoration:none;transition:opacity .15s}
-    .btn-dark{background:#0f172a;color:#fff}
-    .btn-blue{background:#2563eb;color:#fff}
-    .btn:hover{opacity:.85}
-    .note{font-size:.75rem;color:#64748b;background:#f1f5f9;padding:.75rem 1rem;border-radius:8px;margin-top:1.5rem}
+    :root {
+      --bg: #171717;
+      --surface: #262626;
+      --surface-hover: #2e2e2e;
+      --border: #333333;
+      --brand: #a3e635;
+      --brand-dim: rgba(163,230,53,.12);
+      --text: #ffffff;
+      --text-muted: #a3a3a3;
+      --text-dim: #737373;
+      --radius: 12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* Nav */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: rgba(23,23,23,.85);
+      backdrop-filter: blur(12px);
+      z-index: 10;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: .625rem;
+      text-decoration: none;
+    }
+    .logo svg { flex-shrink: 0; }
+    .logo-text {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -.02em;
+    }
+    .nav-badge {
+      font-size: .6875rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--brand);
+      background: var(--brand-dim);
+      border: 1px solid rgba(163,230,53,.25);
+      padding: .25rem .625rem;
+      border-radius: 9999px;
+    }
+
+    /* Hero */
+    .hero {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 5rem 2rem 3.5rem;
+      text-align: center;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--brand);
+      margin-bottom: 1.5rem;
+    }
+    .hero-eyebrow::before,
+    .hero-eyebrow::after {
+      content: '';
+      display: block;
+      width: 24px;
+      height: 1px;
+      background: var(--brand);
+      opacity: .5;
+    }
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -.03em;
+      line-height: 1.15;
+      margin-bottom: 1.25rem;
+    }
+    h1 span { color: var(--brand); }
+    .hero-sub {
+      font-size: 1.0625rem;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin: 0 auto 2.5rem;
+    }
+    .endpoint-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: .75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+      padding: .625rem 1.25rem .625rem .875rem;
+      font-family: 'SFMono-Regular', 'Consolas', monospace;
+      font-size: .875rem;
+      color: var(--brand);
+      margin-bottom: 2rem;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .endpoint-pill:hover { border-color: var(--brand); background: var(--brand-dim); }
+    .endpoint-pill .dot {
+      width: 8px; height: 8px;
+      background: var(--brand);
+      border-radius: 50%;
+      flex-shrink: 0;
+      box-shadow: 0 0 6px var(--brand);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; }
+      50% { opacity: .4; }
+    }
+    .copy-hint { font-size: .7rem; color: var(--text-dim); }
+    .hero-actions {
+      display: flex;
+      gap: .875rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .875rem;
+      font-weight: 600;
+      padding: .6875rem 1.375rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: opacity .15s, transform .1s;
+      border: none;
+      cursor: pointer;
+    }
+    .btn:hover { opacity: .88; transform: translateY(-1px); }
+    .btn-primary { background: var(--brand); color: #171717; }
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: #555; }
+
+    /* Main content */
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2rem 5rem;
+    }
+
+    /* Section */
+    .section { margin-bottom: 3rem; }
+    .section-label {
+      font-size: .6875rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-bottom: 1rem;
+    }
+
+    /* Code block */
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .code-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .code-lang {
+      font-size: .6875rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .copy-btn {
+      font-size: .6875rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .25rem .625rem;
+      cursor: pointer;
+      transition: color .15s, border-color .15s;
+    }
+    .copy-btn:hover { color: var(--brand); border-color: var(--brand); }
+    pre {
+      padding: 1.25rem;
+      font-family: 'SFMono-Regular', 'Consolas', 'Monaco', monospace;
+      font-size: .8125rem;
+      line-height: 1.7;
+      overflow-x: auto;
+      color: #e5e5e5;
+    }
+    .tok-key { color: #a3e635; }
+    .tok-str { color: #fbbf24; }
+    .tok-punc { color: #737373; }
+    .tok-comment { color: #525252; font-style: italic; }
+
+    /* Tools grid */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: .5rem;
+    }
+    .tool-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .625rem .875rem;
+      transition: border-color .15s, background .15s;
+    }
+    .tool-card:hover { border-color: rgba(163,230,53,.3); background: var(--brand-dim); }
+    .tool-name {
+      font-size: .75rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      text-transform: capitalize;
+    }
+
+    /* Security note */
+    .security-note {
+      display: flex;
+      align-items: flex-start;
+      gap: .75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+    }
+    .security-icon {
+      width: 32px; height: 32px;
+      background: var(--brand-dim);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: .875rem;
+    }
+    .security-note p { font-size: .8125rem; color: var(--text-muted); line-height: 1.5; }
+    .security-note strong { color: var(--text); }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      font-size: .75rem;
+      color: var(--text-dim);
+    }
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--brand); }
+
+    @media (max-width: 600px) {
+      nav { padding: 1rem; }
+      .hero { padding: 3rem 1rem 2rem; }
+      main { padding: 0 1rem 4rem; }
+      .tools-grid { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="card">
-    <span class="badge">MCP Server · Live</span>
-    <h1>🧠 Brainfish MCP Server</h1>
-    <p class="subtitle">Give AI assistants in Cursor, Claude Desktop, and VS Code direct access to your Brainfish knowledge base.</p>
 
-    <h2>Endpoint</h2>
-    <div class="endpoint">https://mcp.brainfi.sh</div>
+<nav>
+  <a class="logo" href="https://brainfi.sh" target="_blank" rel="noopener">
+    <svg width="32" height="22" viewBox="0 0 48 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M6 16 Q16 2 36 16 Q16 30 6 16Z" stroke="#a3e635" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+      <path d="M6 16 L0 7" stroke="#a3e635" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M6 16 L0 25" stroke="#a3e635" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="30" cy="13" r="2" fill="#a3e635"/>
+    </svg>
+    <span class="logo-text">Brainfish</span>
+  </a>
+  <span class="nav-badge">MCP Server · Live</span>
+</nav>
 
-    <h2>Cursor / Claude Desktop config</h2>
-    <div class="config">{
-  "mcpServers": {
-    "brainfish": {
-      "url": "https://mcp.brainfi.sh",
-      "headers": {
-        "Authorization": "Bearer bf_api_YOUR_TOKEN",
-        "agent-key": "YOUR_AGENT_KEY"
-      }
-    }
-  }
-}</div>
-
-    <h2>Available tools (${Object.keys(TOOLS).length})</h2>
-    <ul class="tools">${toolList}</ul>
-
-    <div class="links">
-      <a class="btn btn-dark" href="https://github.com/brainfish-ai/brainfish-mcp-server" target="_blank" rel="noopener">📚 Documentation</a>
-      <a class="btn btn-blue" href="https://app.brainfi.sh" target="_blank" rel="noopener">🚀 Get API Token</a>
-    </div>
-
-    <p class="note">🔒 Your credentials are sent directly to the Brainfish API. This server never stores your tokens.</p>
+<section class="hero">
+  <div class="hero-eyebrow">Model Context Protocol</div>
+  <h1>Your knowledge base,<br/><span>inside your AI tools</span></h1>
+  <p class="hero-sub">Connect Cursor, Claude Desktop, and VS Code Copilot directly to your Brainfish knowledge base — search, create, and manage content without leaving your editor.</p>
+  <div class="endpoint-pill" onclick="navigator.clipboard.writeText('https://mcp.brainfi.sh').then(()=>{this.querySelector('.copy-hint').textContent='Copied!';setTimeout(()=>{this.querySelector('.copy-hint').textContent='click to copy'},1500)})">
+    <span class="dot"></span>
+    https://mcp.brainfi.sh
+    <span class="copy-hint">click to copy</span>
   </div>
+  <div class="hero-actions">
+    <a class="btn btn-primary" href="https://app.brainfi.sh" target="_blank" rel="noopener">Get API Token</a>
+    <a class="btn btn-secondary" href="https://github.com/brainfish-ai/brainfish-mcp-server" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
+      View on GitHub
+    </a>
+  </div>
+</section>
+
+<main>
+  <div class="section">
+    <div class="section-label">Quick setup</div>
+    <div class="code-block">
+      <div class="code-header">
+        <span class="code-lang">JSON — Cursor / Claude Desktop</span>
+        <button class="copy-btn" onclick="const t=this.closest('.code-block').querySelector('pre').innerText;navigator.clipboard.writeText(t).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500)})">Copy</button>
+      </div>
+      <pre><span class="tok-punc">{</span>
+  <span class="tok-key">"mcpServers"</span><span class="tok-punc">: {</span>
+    <span class="tok-key">"brainfish"</span><span class="tok-punc">: {</span>
+      <span class="tok-key">"url"</span><span class="tok-punc">:</span> <span class="tok-str">"https://mcp.brainfi.sh"</span><span class="tok-punc">,</span>
+      <span class="tok-key">"headers"</span><span class="tok-punc">: {</span>
+        <span class="tok-key">"Authorization"</span><span class="tok-punc">:</span> <span class="tok-str">"Bearer bf_api_YOUR_TOKEN"</span><span class="tok-punc">,</span>
+        <span class="tok-key">"agent-key"</span><span class="tok-punc">:</span>     <span class="tok-str">"YOUR_AGENT_KEY"</span>  <span class="tok-comment">// optional</span>
+      <span class="tok-punc">}</span>
+    <span class="tok-punc">}</span>
+  <span class="tok-punc">}</span>
+<span class="tok-punc">}</span></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-label">${tools.length} available tools</div>
+    <div class="tools-grid">${toolCards}</div>
+  </div>
+
+  <div class="security-note">
+    <div class="security-icon">🔒</div>
+    <p><strong>Your credentials stay private.</strong> Tokens are forwarded directly to the Brainfish API on each request. This server never stores, logs, or caches your API keys.</p>
+  </div>
+</main>
+
+<footer>
+  <p>Built by <a href="https://brainfi.sh" target="_blank" rel="noopener">Brainfish</a> · <a href="https://github.com/brainfish-ai/brainfish-mcp-server" target="_blank" rel="noopener">Open source on GitHub</a></p>
+</footer>
+
 </body>
 </html>`;
     return new NextResponse(html, {
