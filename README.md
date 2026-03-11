@@ -1,51 +1,24 @@
 # Brainfish MCP Server
 
-A Model Context Protocol (MCP) server implementation that integrates with [Brainfish](https://brainfi.sh) for knowledge base management and AI-powered content operations.
+A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for [Brainfish](https://brainfi.sh) — giving AI assistants in Cursor, Claude Desktop, VS Code, and other MCP-compatible tools direct access to your Brainfish knowledge base.
 
-## Features
+**Endpoint:** `https://mcp.brainfi.sh/api/mcp`
 
-- **Document Management**: Search, create, update, and delete documents in your Brainfish knowledge base
-- **Semantic Search**: Find relevant content using AI-powered semantic search
-- **Document Suggestions**: Propose and manage content improvements through a collaborative workflow
-- **Collection Management**: Organize documents into collections with proper permissions
-- **AI-Powered Answers**: Generate streaming AI responses from your knowledge base
-- **Authentication**: Secure API token and agent key management
+---
 
-## Installation
+## Quick Start
 
-### Quick Deploy (No Environment Variables Required!)
+No installation required. Add the following to your MCP client configuration and you're ready to go.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbrainfish-ai%2Fbrainfish-mcp-server)
+### Cursor
 
-**That's it!** Users pass their credentials through MCP client configuration.
-
-### Running Locally
-
-```bash
-npx -y brainfish-mcp
-# Credentials passed via MCP client headers
-```
-
-### Manual Installation
-
-```bash
-npm install -g brainfish-mcp
-```
-
-### Running on Cursor
-
-To configure Brainfish MCP in Cursor:
-
-1. Open Cursor Settings
-2. Go to Features > MCP Servers
-3. Click "+ Add new global MCP server"
-4. Enter the following configuration:
+Go to **Settings → Features → MCP Servers → Add new global MCP server**:
 
 ```json
 {
   "mcpServers": {
-    "brainfish-mcp": {
-      "url": "https://your-project.vercel.app/api/mcp",
+    "brainfish": {
+      "url": "https://mcp.brainfi.sh/api/mcp",
       "headers": {
         "Authorization": "Bearer bf_api_YOUR_TOKEN",
         "agent-key": "your-agent-key"
@@ -55,34 +28,38 @@ To configure Brainfish MCP in Cursor:
 }
 ```
 
-### Running on VS Code
+### Claude Desktop
 
-Add the following to your User Settings (JSON) file:
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "brainfish": {
+      "url": "https://mcp.brainfi.sh/api/mcp",
+      "headers": {
+        "Authorization": "Bearer bf_api_YOUR_TOKEN",
+        "agent-key": "your-agent-key"
+      }
+    }
+  }
+}
+```
+
+### VS Code
+
+Add to your User Settings (JSON):
 
 ```json
 {
   "mcp": {
-    "inputs": [
-      {
-        "type": "promptString",
-        "id": "apiToken",
-        "description": "Brainfish API Token",
-        "password": true
-      },
-      {
-        "type": "promptString", 
-        "id": "agentKey",
-        "description": "Brainfish Agent Key",
-        "password": true
-      }
-    ],
     "servers": {
       "brainfish": {
-        "command": "npx",
-        "args": ["-y", "brainfish-mcp"],
-        "env": {
-          "BRAINFISH_API_TOKEN": "${input:apiToken}",
-          "BRAINFISH_AGENT_KEY": "${input:agentKey}"
+        "type": "http",
+        "url": "https://mcp.brainfi.sh/api/mcp",
+        "headers": {
+          "Authorization": "Bearer bf_api_YOUR_TOKEN",
+          "agent-key": "your-agent-key"
         }
       }
     }
@@ -90,283 +67,152 @@ Add the following to your User Settings (JSON) file:
 }
 ```
 
-## Configuration
+---
 
-### Environment Variables
+## Getting Your Credentials
 
-#### Required
+| Credential | Where to find it |
+|---|---|
+| `Authorization` | [Brainfish Dashboard](https://app.brainfi.sh) → Settings → API Tokens → create a token starting with `bf_api_` |
+| `agent-key` | [Brainfish Dashboard](https://app.brainfi.sh) → Agents → click any agent to copy its key |
 
-- `BRAINFISH_API_TOKEN`: Your Brainfish API token (starts with `bf_api_`)
-  - Get this from your [Brainfish Dashboard](https://app.brainfi.sh) under **Settings → API Tokens**
+The `agent-key` is only required for AI answer generation tools (`brainfish_generate_answer`, `brainfish_generate_follow_ups`). All other tools work with the API token alone.
 
-#### Optional (for AI features)
+---
 
-- `BRAINFISH_AGENT_KEY`: Your agent key for AI-powered features
-  - Get this from your Brainfish Dashboard under **Agents**
-  - Required for `brainfish_generate_answer` tool
-
-#### Optional Configuration
-
-- `BRAINFISH_API_URL`: Custom API endpoint (default: `https://api.brainfi.sh`)
-- `BRAINFISH_TIMEOUT`: Request timeout in milliseconds (default: 30000)
-- `BRAINFISH_RETRY_ATTEMPTS`: Maximum retry attempts (default: 3)
-- `BRAINFISH_RETRY_DELAY`: Initial retry delay in milliseconds (default: 1000)
-
-### Usage with Claude Desktop
-
-Add this to your `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "brainfish-mcp": {
-      "command": "npx",
-      "args": ["-y", "brainfish-mcp"],
-      "env": {
-        "BRAINFISH_API_TOKEN": "bf_api_YOUR_TOKEN",
-        "BRAINFISH_AGENT_KEY": "your-agent-key"
-      }
-    }
-  }
-}
-```
-
-## Available Tools
-
-### Document Management (Read-Only)
-
-#### `brainfish_search_documents`
-Search documents using semantic search.
-
-```json
-{
-  "name": "brainfish_search_documents",
-  "arguments": {
-    "query": "How to reset user passwords",
-    "collectionId": "col-123",
-    "limit": 10,
-    "cmsOnly": true
-  }
-}
-```
-
-#### `brainfish_get_document`
-Retrieve a specific document by ID or URL slug.
-
-#### `brainfish_list_documents`
-List documents with filtering and pagination (read-only for content discovery).
-
-### Collection Management (Read-Only)
-
-#### `brainfish_list_collections`
-List all available collections for content organization understanding.
-
-### Document Suggestions (Review-Based Content Management)
-
-#### `brainfish_suggest_document_changes`
-Propose improvements to existing documents (goes through review process).
-
-```json
-{
-  "name": "brainfish_suggest_document_changes",
-  "arguments": {
-    "documentId": "doc-123",
-    "title": "Updated API Guide",
-    "text": "# API Authentication (Updated)\n\nImproved with OAuth 2.0...",
-    "reason": "Added OAuth 2.0 support and updated security requirements"
-  }
-}
-```
-
-#### `brainfish_suggest_new_document`
-Suggest creating entirely new documents (requires base document for suggestion system).
-
-```json
-{
-  "name": "brainfish_suggest_new_document",
-  "arguments": {
-    "baseDocumentId": "doc-123",
-    "title": "Troubleshooting Guide",
-    "text": "# Common Issues\n\n1. Connection problems...",
-    "reason": "Users frequently ask about troubleshooting",
-    "collectionId": "col-456"
-  }
-}
-```
-
-#### `brainfish_update_suggestion`
-Update pending suggestions before they're reviewed.
-
-### AI-Powered Features
-
-#### `brainfish_generate_answer`
-Generate AI answers from your knowledge base (requires agent key).
-
-```json
-{
-  "name": "brainfish_generate_answer",
-  "arguments": {
-    "query": "How do I integrate the API?",
-    "conversationId": "01234567890123456789012345"
-  }
-}
-```
+## Available Tools (22)
 
 ### Authentication
+| Tool | Description |
+|---|---|
+| `brainfish_validate_token` | Validate your API token and return user/team info |
 
-#### `brainfish_validate_token`
-Validate your API token and get user information.
+### Documents
+| Tool | Description |
+|---|---|
+| `brainfish_search_documents` | Semantic search across your knowledge base |
+| `brainfish_list_documents` | List documents with filtering and pagination |
+| `brainfish_get_document` | Get full document content by ID or URL slug |
+| `brainfish_create_document` | Create a new document in a collection |
+| `brainfish_update_document` | Update title, content, or publish status |
+| `brainfish_delete_document` | Soft-delete (or permanently delete) a document |
+| `brainfish_generate_article_suggestion` | Trigger AI-powered article suggestions from content (async) |
 
-#### `brainfish_revoke_token`
-Revoke the current API token.
+### Collections
+| Tool | Description |
+|---|---|
+| `brainfish_list_collections` | List all accessible collections |
+| `brainfish_get_collection` | Get collection details by ID |
+| `brainfish_create_collection` | Create a new collection |
+| `brainfish_update_collection` | Update collection name, description, visibility |
+| `brainfish_delete_collection` | Delete a collection and all its documents |
 
-## Common Workflows
+### AI Agents
+| Tool | Description |
+|---|---|
+| `brainfish_generate_answer` | Generate an AI answer from your knowledge base (requires agent-key) |
+| `brainfish_generate_follow_ups` | Generate follow-up questions for a completed conversation (requires agent-key) |
 
-### Content Suggestion Workflow
+### Catalogs
+| Tool | Description |
+|---|---|
+| `brainfish_list_catalogs` | List all catalogs, with optional source/status filtering |
+| `brainfish_create_catalog` | Create a new catalog |
+| `brainfish_get_catalog` | Get catalog details and content count |
+| `brainfish_sync_catalog_content` | Full sync of content files to a catalog |
 
-```javascript
-// 1. List collections to understand organization
-await mcp.call('brainfish_list_collections');
+### Document Suggestions (internal workflow)
+| Tool | Description |
+|---|---|
+| `brainfish_suggest_document_changes` | Propose edits to an existing document (goes through review) |
+| `brainfish_suggest_new_document` | Suggest a new document for creation |
+| `brainfish_update_suggestion` | Update a pending suggestion before review |
 
-// 2. Search for existing content to improve
-const results = await mcp.call('brainfish_search_documents', {
-  query: "API authentication"
-});
+---
 
-// 3. Get full document content
-const document = await mcp.call('brainfish_get_document', {
-  id: results.data[0].id
-});
+## MCP Resources (5)
 
-// 4. Suggest improvements (goes through review)
-await mcp.call('brainfish_suggest_document_changes', {
-  documentId: results.data[0].id,
-  title: "Enhanced API Authentication Guide",
-  text: "# API Authentication (Enhanced)\n\nUpdated with OAuth 2.0...",
-  reason: "Added OAuth 2.0 support and security best practices"
-});
+Resources provide read-only, referenceable content via `brainfish://` URIs:
+
+| URI | Description |
+|---|---|
+| `brainfish://collections` | All accessible collections |
+| `brainfish://collection/{id}` | Collection details and metadata |
+| `brainfish://collection/{id}/documents` | Documents within a collection |
+| `brainfish://document/{id}` | Full document content in Markdown |
+| `brainfish://search?query={q}` | Semantic search results |
+
+---
+
+## Example Usage
+
+### Answer a question from your knowledge base
+```
+"Use Brainfish to answer: how do I reset my password?"
 ```
 
-### New Document Suggestion Workflow
-
-```javascript
-// 1. Find a base document in the target collection
-const documents = await mcp.call('brainfish_list_documents', {
-  collectionId: "col-help-center"
-});
-
-// 2. Suggest new document creation
-await mcp.call('brainfish_suggest_new_document', {
-  baseDocumentId: documents.data[0].id,
-  title: "Advanced Troubleshooting Guide",
-  text: "# Advanced Troubleshooting\n\n## Common Issues\n1. Connection timeouts...",
-  reason: "Users frequently need advanced troubleshooting help",
-  collectionId: "col-help-center"
-});
+### Find and update a document
+```
+"Search Brainfish for our API authentication guide and update it with the new OAuth steps"
 ```
 
-### AI-Powered Q&A
-
-```javascript
-// Generate AI answer from knowledge base
-const answer = await mcp.call('brainfish_generate_answer', {
-  query: "How do I troubleshoot API connection issues?",
-  conversationId: "conversation-123"
-});
-
-// Follow-up question in same conversation
-const followup = await mcp.call('brainfish_generate_answer', {
-  query: "What about rate limiting errors?",
-  conversationId: "conversation-123"
-});
+### Create new content
 ```
+"Create a new document in the Help Center collection about webhook setup"
+```
+
+### Sync external content to a catalog
+```json
+{
+  "name": "brainfish_sync_catalog_content",
+  "arguments": {
+    "id": "your-catalog-uuid",
+    "files": [
+      {
+        "url": "https://docs.yoursite.com/getting-started",
+        "title": "Getting Started",
+        "content": "# Getting Started\n\nWelcome..."
+      }
+    ]
+  }
+}
+```
+
+---
 
 ## Error Handling
 
-The server provides comprehensive error handling with detailed error messages:
+| HTTP Code | Error | Meaning |
+|---|---|---|
+| 401 | `authentication_required` | Missing or invalid API token / agent key |
+| 404 | `not_found` | Resource does not exist |
+| 409 | `conflict` | Duplicate request (article suggestions cached for 5 min) |
+| 422 | `validation_failed` | Invalid request parameters |
+| 429 | `rate_limit_exceeded` | 25 req/min limit reached |
+| 500 | `internal_error` | Brainfish server error |
 
-```json
-{
-  "error": "validation_failed",
-  "message": "Request validation failed",
-  "statusCode": 422,
-  "validationErrors": [
-    {
-      "field": "query",
-      "message": "Query cannot be empty",
-      "code": "invalid_string"
-    }
-  ],
-  "requestId": "req-abc123"
-}
-```
+Responses include a `requestId` you can share with Brainfish support for debugging.
 
-Common error codes:
-- `authentication_required` (401): Invalid or missing API token/agent key
-- `not_found` (404): Resource not found
-- `validation_failed` (422): Invalid request parameters
-- `rate_limit_exceeded` (429): Too many requests
-- `internal_error` (500): Server error
+---
 
-## Rate Limiting
+## Self-Hosting
 
-The API implements rate limiting:
-- Most endpoints: 25 requests per minute
-- Token revocation: 10 requests per hour
+The server is a Next.js app. Deploy your own instance:
 
-Rate limit headers are included in responses:
-- `X-RateLimit-Limit`: Maximum requests allowed
-- `X-RateLimit-Remaining`: Remaining requests in current window
-- `X-RateLimit-Reset`: Unix timestamp when limit resets
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fbrainfish-ai%2Fbrainfish-mcp-server)
 
-## Development
+Credentials are passed per-request via HTTP headers — no environment variables required on the server.
 
-```bash
-# Install dependencies
-npm install
-
-# Build
-npm run build
-
-# Run tests
-npm test
-
-# Lint and format
-npm run lint
-npm run format
-```
-
-## Getting Started
-
-1. **Get your API credentials**:
-   - Create an account at [Brainfish](https://app.brainfi.sh)
-   - Generate an API token under **Settings → API Tokens**
-   - (Optional) Get an agent key under **Agents** for AI features
-
-2. **Install and configure**:
-   ```bash
-   npm install -g brainfish-mcp
-   ```
-
-3. **Test your setup**:
-   ```bash
-   env BRAINFISH_API_TOKEN=bf_api_YOUR_TOKEN npx brainfish-mcp
-   ```
-
-4. **Validate your token**:
-   ```json
-   {
-     "name": "brainfish_validate_token",
-     "arguments": {}
-   }
-   ```
+---
 
 ## Support
 
-- Documentation: [Brainfish Help Center](https://help.brainfi.sh)
-- API Reference: [Brainfish API Docs](https://help.brainfi.sh/articles/api-reference-7mjzVCAmeM)
-- Issues: [GitHub Issues](https://github.com/brainfish-ai/brainfish-mcp-server/issues)
+- Help Center: [help.brainfi.sh](https://help.brainfi.sh)
+- API Reference: [help.brainfi.sh/articles/api-reference-7mjzVCAmeM](https://help.brainfi.sh/articles/api-reference-7mjzVCAmeM)
+- Issues: [github.com/brainfish-ai/brainfish-mcp-server/issues](https://github.com/brainfish-ai/brainfish-mcp-server/issues)
+
+---
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT — see [LICENSE](LICENSE)
