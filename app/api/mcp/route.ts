@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BrainfishClient, BrainfishApiError } from '../../../src/client.js';
-import type { BrainfishSessionData } from '../../../src/types.js';
+import { BrainfishClient, BrainfishApiError } from '../../../src/client';
+import type { BrainfishSessionData } from '../../../src/types';
 
 function extractBrainfishCredentials(request: NextRequest): { 
   apiToken?: string; 
