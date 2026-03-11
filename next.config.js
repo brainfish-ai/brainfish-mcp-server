@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ['node-fetch']
-  },
+  serverExternalPackages: ['node-fetch'],
   typescript: {
     ignoreBuildErrors: false,
   },
