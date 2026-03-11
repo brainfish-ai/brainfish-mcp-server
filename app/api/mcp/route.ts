@@ -34,8 +34,10 @@ function extractBrainfishCredentials(request: NextRequest): {
   return { apiToken, agentKey: agentKeyHeader ?? oauthAgentKey };
 }
 
+// realm must be a URL; resource_metadata points to RFC 9728 protected-resource doc
+// (which lists authorization_servers → Claude follows that chain to discover OAuth)
 const WWW_AUTHENTICATE =
-  'Bearer realm="Brainfish MCP", resource_metadata="https://mcp.brainfi.sh/.well-known/oauth-authorization-server"';
+  'Bearer realm="https://mcp.brainfi.sh", resource_metadata="https://mcp.brainfi.sh/.well-known/oauth-protected-resource"';
 
 function createBrainfishClient(session: BrainfishSessionData): BrainfishClient {
   if (!session.apiToken) {
