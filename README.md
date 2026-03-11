@@ -2,7 +2,7 @@
 
 A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server for [Brainfish](https://brainfi.sh) — giving AI assistants in Cursor, Claude Desktop, VS Code, and other MCP-compatible tools direct access to your Brainfish knowledge base.
 
-**Endpoint:** `https://mcp.brainfi.sh/api/mcp`
+**Endpoint:** `https://mcp.brainfi.sh`
 
 ---
 
@@ -18,7 +18,7 @@ Go to **Settings → Features → MCP Servers → Add new global MCP server**:
 {
   "mcpServers": {
     "brainfish": {
-      "url": "https://mcp.brainfi.sh/api/mcp",
+      "url": "https://mcp.brainfi.sh",
       "headers": {
         "Authorization": "Bearer bf_api_YOUR_TOKEN",
         "agent-key": "your-agent-key"
@@ -36,7 +36,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 {
   "mcpServers": {
     "brainfish": {
-      "url": "https://mcp.brainfi.sh/api/mcp",
+      "url": "https://mcp.brainfi.sh",
       "headers": {
         "Authorization": "Bearer bf_api_YOUR_TOKEN",
         "agent-key": "your-agent-key"
@@ -56,7 +56,7 @@ Add to your User Settings (JSON):
     "servers": {
       "brainfish": {
         "type": "http",
-        "url": "https://mcp.brainfi.sh/api/mcp",
+        "url": "https://mcp.brainfi.sh",
         "headers": {
           "Authorization": "Bearer bf_api_YOUR_TOKEN",
           "agent-key": "your-agent-key"

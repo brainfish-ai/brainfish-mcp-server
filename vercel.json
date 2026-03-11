@@ -7,9 +7,12 @@
   "env": {
     "NODE_ENV": "production"
   },
+  "rewrites": [
+    { "source": "/", "destination": "/api/mcp" }
+  ],
   "headers": [
     {
-      "source": "/api/mcp",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",

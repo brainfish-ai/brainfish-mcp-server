@@ -710,13 +710,80 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  const accept = request.headers.get('accept') ?? '';
+  if (accept.includes('text/html')) {
+    const toolList = Object.keys(TOOLS).map(t => `<li><code>${t}</code></li>`).join('');
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brainfish MCP Server</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#f8fafc;color:#1e293b;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
+    .card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:680px;width:100%;padding:2.5rem}
+    h1{font-size:1.75rem;font-weight:700;margin-bottom:.5rem}
+    .subtitle{color:#64748b;margin-bottom:2rem}
+    .badge{display:inline-block;background:#dbeafe;color:#1d4ed8;font-size:.75rem;font-weight:600;padding:.25rem .75rem;border-radius:9999px;margin-bottom:2rem}
+    h2{font-size:1rem;font-weight:600;margin-bottom:.75rem;color:#374151}
+    .endpoint{background:#0f172a;color:#86efac;font-family:monospace;padding:1rem 1.25rem;border-radius:10px;font-size:.875rem;margin-bottom:2rem;word-break:break-all}
+    .config{background:#0f172a;color:#e2e8f0;font-family:monospace;font-size:.75rem;padding:1.25rem;border-radius:10px;white-space:pre;overflow-x:auto;margin-bottom:2rem}
+    .tools{columns:2;gap:1rem;margin-bottom:2rem}
+    .tools li{font-family:monospace;font-size:.75rem;color:#475569;list-style:none;padding:.2rem 0}
+    .tools code{background:#f1f5f9;padding:.1rem .35rem;border-radius:4px}
+    .links{display:flex;gap:1rem;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;gap:.4rem;padding:.6rem 1.1rem;border-radius:8px;font-size:.875rem;font-weight:500;text-decoration:none;transition:opacity .15s}
+    .btn-dark{background:#0f172a;color:#fff}
+    .btn-blue{background:#2563eb;color:#fff}
+    .btn:hover{opacity:.85}
+    .note{font-size:.75rem;color:#64748b;background:#f1f5f9;padding:.75rem 1rem;border-radius:8px;margin-top:1.5rem}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">MCP Server · Live</span>
+    <h1>🧠 Brainfish MCP Server</h1>
+    <p class="subtitle">Give AI assistants in Cursor, Claude Desktop, and VS Code direct access to your Brainfish knowledge base.</p>
+
+    <h2>Endpoint</h2>
+    <div class="endpoint">https://mcp.brainfi.sh</div>
+
+    <h2>Cursor / Claude Desktop config</h2>
+    <div class="config">{
+  "mcpServers": {
+    "brainfish": {
+      "url": "https://mcp.brainfi.sh",
+      "headers": {
+        "Authorization": "Bearer bf_api_YOUR_TOKEN",
+        "agent-key": "YOUR_AGENT_KEY"
+      }
+    }
+  }
+}</div>
+
+    <h2>Available tools (${Object.keys(TOOLS).length})</h2>
+    <ul class="tools">${toolList}</ul>
+
+    <div class="links">
+      <a class="btn btn-dark" href="https://github.com/brainfish-ai/brainfish-mcp-server" target="_blank" rel="noopener">📚 Documentation</a>
+      <a class="btn btn-blue" href="https://app.brainfi.sh" target="_blank" rel="noopener">🚀 Get API Token</a>
+    </div>
+
+    <p class="note">🔒 Your credentials are sent directly to the Brainfish API. This server never stores your tokens.</p>
+  </div>
+</body>
+</html>`;
+    return new NextResponse(html, {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    });
+  }
+
   return NextResponse.json({
     name: 'Brainfish MCP Server',
     version: '1.0.0',
     description: 'Model Context Protocol server for Brainfish knowledge base management',
-    endpoints: {
-      mcp: '/api/mcp'
-    },
+    endpoint: 'https://mcp.brainfi.sh',
     tools: Object.keys(TOOLS)
   });
 }
