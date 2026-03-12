@@ -88,6 +88,7 @@ const TOOLS = {
   brainfish_search_documents: {
     name: 'brainfish_search_documents',
     description: 'Search documents in your Brainfish knowledge base using semantic search',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -104,6 +105,7 @@ const TOOLS = {
   brainfish_get_document: {
     name: 'brainfish_get_document',
     description: 'Retrieve a specific document by its ID or URL slug',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -115,6 +117,7 @@ const TOOLS = {
   brainfish_suggest_document_changes: {
     name: 'brainfish_suggest_document_changes',
     description: 'Create a suggestion to improve or update an existing document',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -131,6 +134,7 @@ const TOOLS = {
   brainfish_suggest_new_document: {
     name: 'brainfish_suggest_new_document',
     description: 'Suggest creating a new document (requires existing document as base for suggestion system)',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -147,6 +151,7 @@ const TOOLS = {
   brainfish_update_suggestion: {
     name: 'brainfish_update_suggestion',
     description: 'Update an existing document suggestion',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -161,6 +166,7 @@ const TOOLS = {
   brainfish_generate_answer: {
     name: 'brainfish_generate_answer',
     description: 'Generate streaming AI-powered answers from your knowledge base',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -173,6 +179,7 @@ const TOOLS = {
   brainfish_list_collections: {
     name: 'brainfish_list_collections',
     description: 'List available collections to understand content organization',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -187,6 +194,7 @@ const TOOLS = {
   brainfish_list_documents: {
     name: 'brainfish_list_documents',
     description: 'List documents in collections to understand existing content',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -202,6 +210,7 @@ const TOOLS = {
   brainfish_validate_token: {
     name: 'brainfish_validate_token',
     description: 'Validate your Brainfish API token and return user information',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {},
@@ -213,6 +222,7 @@ const TOOLS = {
   brainfish_get_collection: {
     name: 'brainfish_get_collection',
     description: 'Get details of a specific collection by its ID',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -224,6 +234,7 @@ const TOOLS = {
   brainfish_create_collection: {
     name: 'brainfish_create_collection',
     description: 'Create a new collection to organise documents',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -241,6 +252,7 @@ const TOOLS = {
   brainfish_update_collection: {
     name: 'brainfish_update_collection',
     description: 'Update properties of an existing collection',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -259,6 +271,7 @@ const TOOLS = {
   brainfish_delete_collection: {
     name: 'brainfish_delete_collection',
     description: 'Delete a collection and all its documents. Cannot delete the last collection in a team.',
+    annotations: { readOnlyHint: false, destructiveHint: true },
     inputSchema: {
       type: 'object',
       properties: {
@@ -272,6 +285,7 @@ const TOOLS = {
   brainfish_create_document: {
     name: 'brainfish_create_document',
     description: 'Create a new document/article in a collection',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -289,6 +303,7 @@ const TOOLS = {
   brainfish_update_document: {
     name: 'brainfish_update_document',
     description: 'Update an existing document by its ID or URL slug',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -306,6 +321,7 @@ const TOOLS = {
   brainfish_delete_document: {
     name: 'brainfish_delete_document',
     description: 'Delete a document (soft-delete by default). Use permanent=true to permanently delete.',
+    annotations: { readOnlyHint: false, destructiveHint: true },
     inputSchema: {
       type: 'object',
       properties: {
@@ -318,6 +334,7 @@ const TOOLS = {
   brainfish_generate_article_suggestion: {
     name: 'brainfish_generate_article_suggestion',
     description: 'Trigger the Brainfish Knowledge Discovery Agent to analyse content and generate article suggestions asynchronously. Returns a task ID to track progress.',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -333,6 +350,7 @@ const TOOLS = {
   brainfish_generate_follow_ups: {
     name: 'brainfish_generate_follow_ups',
     description: 'Generate follow-up questions for a completed conversation based on the AI answer and source documents',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -347,6 +365,7 @@ const TOOLS = {
   brainfish_list_catalogs: {
     name: 'brainfish_list_catalogs',
     description: 'List all catalogs for the authenticated team, with optional filtering by source type and status',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -365,6 +384,7 @@ const TOOLS = {
   brainfish_create_catalog: {
     name: 'brainfish_create_catalog',
     description: 'Create a new catalog. After creation, use brainfish_sync_catalog_content to push content into it.',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -383,6 +403,7 @@ const TOOLS = {
   brainfish_get_catalog: {
     name: 'brainfish_get_catalog',
     description: 'Retrieve a catalog by its ID, including a count of content entries',
+    annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
@@ -394,6 +415,7 @@ const TOOLS = {
   brainfish_sync_catalog_content: {
     name: 'brainfish_sync_catalog_content',
     description: 'Full sync of content files to a catalog. New files are created, changed files are updated, and files missing from the request are removed.',
+    annotations: { readOnlyHint: false, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
