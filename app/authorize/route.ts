@@ -160,5 +160,5 @@ export async function POST(request: NextRequest) {
   callback.searchParams.set('code', code);
   if (state) callback.searchParams.set('state', state);
 
-  return NextResponse.redirect(callback.toString());
+  return NextResponse.redirect(callback.toString(), 302);
 }
