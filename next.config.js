@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ['node-fetch'],
+  serverExternalPackages: [],
   turbopack: {
     root: import.meta.dirname,
   },
