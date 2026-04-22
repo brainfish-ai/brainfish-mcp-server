@@ -26,6 +26,8 @@
     "dotenv": "^17.2.2",
     "typescript": "^5.9.2",
     "zod": "^4.1.5",
+    "node-fetch": "^3.3.2",
+    "@types/node-fetch": "^2.6.11",
     "next": "^16.0.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"

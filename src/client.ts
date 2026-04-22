@@ -1,6 +1,7 @@
-import type {
-  BrainfishConfig,
-  BrainfishSessionData,
+import fetch, { Response } from 'node-fetch';
+import type { 
+  BrainfishConfig, 
+  BrainfishSessionData, 
   BrainfishError,
   ApiResponse,
   Document,
