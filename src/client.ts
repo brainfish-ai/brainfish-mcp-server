@@ -1,6 +1,6 @@
-import type { 
-  BrainfishConfig, 
-  BrainfishSessionData, 
+import type {
+  BrainfishConfig,
+  BrainfishSessionData,
   BrainfishError,
   ApiResponse,
   Document,
@@ -18,6 +18,7 @@ import type {
   TimelineEvent,
   SessionInsights,
   SearchSessionsRequest,
+  AnalyticsThreadsResponse
 } from './types.js';
 
 export class BrainfishClient {
@@ -306,6 +307,23 @@ export class BrainfishClient {
       method: 'POST',
       body: limit !== undefined ? { limit } : {},
       requiresAgentKey: true
+    });
+  }
+
+  // Analytics
+  async getAnalyticsThreads(params: {
+    dateRange: { from: number; to: number };
+    limit?: number;
+    offset?: number;
+    sources?: string[];
+    status?: string[];
+    feedback?: string[];
+    searchQuery?: string;
+    actions?: string[];
+  }): Promise<AnalyticsThreadsResponse> {
+    return this.request('/v1/analytics/threads', {
+      method: 'POST',
+      body: params
     });
   }
 

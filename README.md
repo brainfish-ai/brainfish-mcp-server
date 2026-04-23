@@ -237,6 +237,50 @@ Responses include a `requestId` you can share with Brainfish support for debuggi
 
 ---
 
+## Local Development
+
+To test your local changes against Claude Desktop:
+
+**1. Start the dev server**
+
+```sh
+npm run dev
+```
+
+The server runs at `http://localhost:3000` by default (Next.js will use the next available port if 3000 is taken — check the terminal output).
+
+**2. Configure Claude Desktop**
+
+Claude Desktop does not support URL-based MCP servers — you need [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) as a stdio bridge.
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "brainfish-local": {
+      "command": "npx",
+      "args": [
+        "mcp-remote",
+        "http://localhost:3000/api/mcp",
+        "--header",
+        "Authorization:Bearer bf_api_YOUR_TOKEN",
+        "--header",
+        "agent-key:YOUR_AGENT_KEY"
+      ]
+    }
+  }
+}
+```
+
+`npx` will install `mcp-remote` automatically on first run.
+
+**3. Restart Claude Desktop**
+
+Claude Desktop requires a full quit and reopen to pick up config changes.
+
+---
+
 ## Self-Hosting
 
 The server is a Next.js app deployable to Vercel with zero configuration:
