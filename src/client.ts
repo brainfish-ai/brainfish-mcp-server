@@ -393,7 +393,13 @@ export class BrainfishClient {
     const searchParams = new URLSearchParams();
     if (params) {
       Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined) {
+        if (value === undefined || value === null) return;
+        if (Array.isArray(value)) {
+          if (value.length === 0) return;
+          // Server expects comma-separated for these filter params.
+          // Explicitly join so we don't rely on Array#toString coercion.
+          searchParams.append(key, value.map(String).join(','));
+        } else {
           searchParams.append(key, String(value));
         }
       });
