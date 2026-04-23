@@ -119,7 +119,7 @@ Authorization: Bearer bf_api_YOUR_TOKEN
 
 ---
 
-## Available Tools (22)
+## Available Tools (26)
 
 ### Search & Documents
 
@@ -167,6 +167,15 @@ Authorization: Bearer bf_api_YOUR_TOKEN
 | `brainfish_create_catalog` | Create a new catalog |
 | `brainfish_sync_catalog_content` | Full sync of content files to a catalog |
 
+### Sessions & Analytics
+
+| Tool | Description |
+|---|---|
+| `brainfish_search_sessions` | Search chat sessions by query text and filters |
+| `brainfish_get_session` | Get full conversation detail (queries, answers, feedback, analytics) |
+| `brainfish_get_session_timeline` | Get chronological event timeline for a conversation |
+| `brainfish_generate_session_insights` | Generate structured LLM diagnosis of a session |
+
 ### Auth
 
 | Tool | Description |
@@ -202,6 +211,12 @@ Resources provide read-only, referenceable content via `brainfish://` URIs:
 ```
 ```
 "List all collections in my Brainfish workspace"
+```
+```
+"Find recent sessions where users asked about refunds and tell me what went wrong"
+```
+```
+"Show me the full conversation for session abc123 and generate insights on why it failed"
 ```
 
 ---
