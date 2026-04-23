@@ -865,6 +865,7 @@ export async function GET(request: NextRequest) {
     // Detect whether the visitor already has an active Brainfish session cookie.
     // The platform sets `accessToken` on `.brainfi.sh` so it is shared across subdomains.
     const hasSession = !!request.cookies.get('accessToken')?.value;
+    const appUrl = process.env.BRAINFISH_APP_URL || 'https://app.brainfi.sh';
 
     const toolGroups: Record<string, { icon: string; tools: string[] }> = {
       'Search & Documents': {
@@ -1908,7 +1909,7 @@ document.addEventListener('keydown', function(e) {
       <div id="modal-step-loading" class="modal-step">
         <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 0;gap:1rem">
           <div style="width:36px;height:36px;border:3px solid rgba(163,230,53,.2);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite"></div>
-          <p class="modal-sub" style="margin:0;text-align:center">Creating your <strong style="color:var(--text)">Cursor MCP</strong> key…</p>
+          <p class="modal-sub" style="margin:0;text-align:center">Creating your <strong style="color:var(--text)">Brainfish MCP</strong> key…</p>
         </div>
       </div>
 
@@ -1923,7 +1924,7 @@ document.addEventListener('keydown', function(e) {
 
         <div id="modal-error" class="modal-error"></div>
 
-        <a href="https://app.brainfi.sh" target="_blank" rel="noopener" class="mbtn" style="text-decoration:none;margin-bottom:.75rem">
+        <a href="${appUrl}/home" target="_blank" rel="noopener" class="mbtn" style="text-decoration:none;margin-bottom:.75rem">
           Log in to Brainfish →
         </a>
         <button class="mbtn" onclick="retryAfterLogin()" style="background:var(--surface);color:var(--text);border:1px solid var(--border)">
