@@ -316,7 +316,7 @@ export class BrainfishClient {
     searchQuery?: string;
     actions?: string[];
   }): Promise<AnalyticsThreadsResponse> {
-    return this.request('/api/analytics.threads', {
+    return this.request('/v1/analytics/threads', {
       method: 'POST',
       body: params
     });
