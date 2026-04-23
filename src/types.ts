@@ -183,3 +183,41 @@ export interface ArticleSuggestionTask {
   task_id: string;
   status: string;
 }
+
+// Analytics (ClickHouse-backed endpoints on analytic-service)
+export interface TimelineEvent {
+  id: string;
+  name: string;
+  createdAt: string;
+  userId: string;
+  sessionId: string;
+  widgetKey: string;
+  conversationId: string;
+  searchQueryId: string;
+  path: string;
+  origin: string;
+  properties: Record<string, string>;
+}
+
+export interface ChatSessionSummary {
+  conversationId: string;
+  startedAt: string;
+  userId: string;
+  sessionId: string;
+  searchQueryIds: string[];
+  eventCount: number;
+}
+
+export interface ConversationDetail {
+  conversationId: string;
+  startedAt: string;
+  userId: string;
+  sessionId: string;
+  searchQueryIds: string[];
+  timeline?: TimelineEvent[];
+}
+
+export interface AnalyticsEnvelope<T> {
+  success: boolean;
+  result: T;
+}

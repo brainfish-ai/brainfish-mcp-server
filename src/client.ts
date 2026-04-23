@@ -1,6 +1,6 @@
-import type { 
-  BrainfishConfig, 
-  BrainfishSessionData, 
+import type {
+  BrainfishConfig,
+  BrainfishSessionData,
   BrainfishError,
   ApiResponse,
   Document,
@@ -12,7 +12,11 @@ import type {
   Catalog,
   SyncContentFile,
   SyncContentResult,
-  ArticleSuggestionTask
+  ArticleSuggestionTask,
+  AnalyticsEnvelope,
+  TimelineEvent,
+  ChatSessionSummary,
+  ConversationDetail
 } from './types.js';
 
 export class BrainfishClient {
@@ -106,6 +110,96 @@ export class BrainfishClient {
     }
 
     throw new Error('Max retry attempts exceeded');
+  }
+
+  // Analytics (analytic-service, x-api-key auth, server-side shared key)
+  private async requestAnalytics<T>(endpoint: string, body: unknown): Promise<T> {
+    const baseUrl =
+      process.env.BRAINFISH_ANALYTICS_API_URL ||
+      process.env.BRAINFISH_API_URL ||
+      'https://api.brainfi.sh';
+    const apiKey = process.env.BRAINFISH_ANALYTICS_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        'BRAINFISH_ANALYTICS_API_KEY is not configured on the MCP server'
+      );
+    }
+
+    const url = `${baseUrl}${endpoint}`;
+    for (let attempt = 0; attempt <= this.config.retryAttempts; attempt++) {
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+
+        if (!response.ok) {
+          const errorData = (await response.json().catch(() => ({}))) as BrainfishError;
+          if ((response.status === 429 || response.status >= 500) && attempt < this.config.retryAttempts) {
+            const delay = this.config.retryDelay * Math.pow(2, attempt);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          throw new BrainfishApiError(
+            errorData.error || 'analytics_api_error',
+            errorData.message || `Analytics request failed with status ${response.status}`,
+            response.status,
+            errorData.requestId,
+            errorData.validationErrors
+          );
+        }
+
+        return (await response.json()) as T;
+      } catch (error) {
+        if (error instanceof BrainfishApiError) throw error;
+        if (attempt < this.config.retryAttempts) {
+          const delay = this.config.retryDelay * Math.pow(2, attempt);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+        throw new Error(`Network error calling analytics: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+    throw new Error('Max retry attempts exceeded for analytics request');
+  }
+
+  async getEventTimeline(params: {
+    teamId: string;
+    conversationId?: string;
+    searchQueryId?: string;
+    userId?: string;
+    sessionId?: string;
+    fromDate?: number;
+    toDate?: number;
+    widgetKeys?: string[];
+    limit?: number;
+  }): Promise<AnalyticsEnvelope<TimelineEvent[]>> {
+    return this.requestAnalytics('/api/v1/events/timeline', params);
+  }
+
+  async listChatSessions(params: {
+    teamId: string;
+    userId?: string;
+    widgetKey?: string;
+    fromDate?: number;
+    toDate?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<AnalyticsEnvelope<ChatSessionSummary[]>> {
+    return this.requestAnalytics('/api/v1/events/chat-sessions', params);
+  }
+
+  async getConversation(params: {
+    teamId: string;
+    conversationId: string;
+    includeTimeline?: boolean;
+    timelineLimit?: number;
+  }): Promise<AnalyticsEnvelope<ConversationDetail | null>> {
+    return this.requestAnalytics('/api/v1/events/conversation', params);
   }
 
   // Authentication

@@ -437,6 +437,59 @@ const TOOLS = {
       },
       required: ['id', 'files']
     }
+  },
+  brainfish_list_chat_sessions: {
+    name: 'brainfish_list_chat_sessions',
+    description: 'List recent chat sessions (one per conversationId) with when the user started the session, the user id, and the linked search query IDs. Use this to find a conversationId before drilling in.',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        teamId: { type: 'string', minLength: 1, description: 'Team ID to scope results to' },
+        userId: { type: 'string', description: 'Only return sessions for this end-user' },
+        widgetKey: { type: 'string', description: 'Only return sessions for this widget' },
+        fromDate: { type: 'number', description: 'Unix seconds lower bound on created_at' },
+        toDate: { type: 'number', description: 'Unix seconds upper bound on created_at' },
+        limit: { type: 'number', minimum: 1, maximum: 500, default: 50 },
+        offset: { type: 'number', minimum: 0, default: 0 }
+      },
+      required: ['teamId']
+    }
+  },
+  brainfish_get_conversation: {
+    name: 'brainfish_get_conversation',
+    description: 'Get chat-session detail for a single conversationId: start time, user id, session id, linked search query IDs, and (by default) the full event timeline. Use this to answer "why did this user ask this?"',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        teamId: { type: 'string', minLength: 1 },
+        conversationId: { type: 'string', minLength: 1 },
+        includeTimeline: { type: 'boolean', default: true, description: 'Include the chronological event timeline for this conversation' },
+        timelineLimit: { type: 'number', minimum: 1, maximum: 1000, default: 200 }
+      },
+      required: ['teamId', 'conversationId']
+    }
+  },
+  brainfish_get_event_timeline: {
+    name: 'brainfish_get_event_timeline',
+    description: 'Chronological event stream for a single scope — supply exactly one of conversationId, searchQueryId, userId, or sessionId. Returns every event (page views, searches, clicks, answers) with its properties.',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        teamId: { type: 'string', minLength: 1 },
+        conversationId: { type: 'string', description: 'Scope to a single chat conversation' },
+        searchQueryId: { type: 'string', description: 'Scope to a single search query' },
+        userId: { type: 'string', description: 'Scope to a single end-user' },
+        sessionId: { type: 'string', description: 'Scope to a single visit session' },
+        fromDate: { type: 'number', description: 'Unix seconds lower bound on created_at' },
+        toDate: { type: 'number', description: 'Unix seconds upper bound on created_at' },
+        widgetKeys: { type: 'array', items: { type: 'string' }, description: 'Optionally narrow to specific widgets' },
+        limit: { type: 'number', minimum: 1, maximum: 1000, default: 200 }
+      },
+      required: ['teamId']
+    }
   }
 };
 
@@ -547,6 +600,16 @@ async function handleToolCall(toolName: string, args: any, request: NextRequest)
 
     case 'brainfish_sync_catalog_content':
       return await client.syncCatalogContent(args.id, args.files);
+
+    // Analytics (ClickHouse)
+    case 'brainfish_list_chat_sessions':
+      return await client.listChatSessions(args);
+
+    case 'brainfish_get_conversation':
+      return await client.getConversation(args);
+
+    case 'brainfish_get_event_timeline':
+      return await client.getEventTimeline(args);
 
     default:
       throw new Error(`Unknown tool: ${toolName}`);
@@ -792,6 +855,10 @@ export async function GET(request: NextRequest) {
       'Catalogs': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
         tools: ['brainfish_list_catalogs','brainfish_get_catalog','brainfish_create_catalog','brainfish_sync_catalog_content']
+      },
+      'Analytics': {
+        icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-5"/></svg>`,
+        tools: ['brainfish_list_chat_sessions','brainfish_get_conversation','brainfish_get_event_timeline']
       },
       'Auth': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`,
