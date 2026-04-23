@@ -114,6 +114,21 @@ export const updateDocumentSuggestionSchema = z.object({
   reason: z.string().optional()
 });
 
+// Analytics schemas
+export const getAnalyticsThreadsSchema = z.object({
+  dateRange: z.object({
+    from: z.number(),
+    to: z.number()
+  }),
+  limit: z.number().int().min(1).max(100).optional().default(10),
+  offset: z.number().int().min(0).optional().default(0),
+  sources: z.array(z.string()).optional(),
+  status: z.array(z.enum(['answered', 'partial', 'unable_to_help', 'technical_issue', 'skipped'])).optional(),
+  feedback: z.array(z.enum(['positive', 'negative'])).optional(),
+  searchQuery: z.string().optional(),
+  actions: z.array(z.string()).optional()
+});
+
 // AI Agent schemas
 export const generateAnswerSchema = z.object({
   query: z.string().min(1).max(2000),

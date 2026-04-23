@@ -183,3 +183,26 @@ export interface ArticleSuggestionTask {
   task_id: string;
   status: string;
 }
+
+export interface AnalyticsThread {
+  id: string;
+  question: string;
+  source: {
+    name: string;
+    color?: string;
+  };
+  resolutionStatus: string | null;
+  timestamp: string;
+  value: string;
+  hasAttributes: boolean;
+  conversationScore: number | null;
+}
+
+export interface AnalyticsThreadsResponse {
+  data: AnalyticsThread[];
+  pagination: {
+    total: number;
+    limit: number;
+    offset: number;
+  };
+}
