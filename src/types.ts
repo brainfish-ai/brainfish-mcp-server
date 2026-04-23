@@ -183,3 +183,99 @@ export interface ArticleSuggestionTask {
   task_id: string;
   status: string;
 }
+
+// Sessions / Analytics
+
+export interface SessionSummary {
+  id: string;
+  conversationId: string | null;
+  lastQuery: string;
+  lastQueryAt: string;
+  turnCount: number;
+  isAnswered: boolean;
+  feedback: string | null;
+  userId: string | null;
+  externalUserId: string | null;
+  source: string | null;
+  widgetId: string | null;
+}
+
+export interface SessionTurn {
+  id: string;
+  query: string;
+  rewrittenQuery: string | null;
+  suggestedAnswer: string | null;
+  answerStatus: string | null;
+  isAnswered: boolean;
+  feedback: string | null;
+  feedbackReason: string | null;
+  source: string | null;
+  resultDocuments: unknown[] | null;
+  metadata: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface SessionDetail {
+  conversationId: string;
+  teamId: string;
+  startedAt: string;
+  endedAt: string;
+  sessionId: string | null;
+  startedAtUrl: string | null;
+  searchQueryIds: string[];
+  turnCount: number;
+  turns: SessionTurn[];
+}
+
+export interface TimelineEvent {
+  id: string;
+  name: string;
+  createdAt: string;
+  userId: string;
+  sessionId: string;
+  widgetKey: string;
+  conversationId: string;
+  searchQueryId: string;
+  path: string;
+  origin: string;
+  properties: Record<string, string>;
+}
+
+export interface SessionInsights {
+  summary: string;
+  rootCause: {
+    category: string;
+    explanation: string;
+  };
+  severity: string;
+  evidence: Array<{
+    type: string;
+    ref: string;
+    quote?: string;
+  }>;
+  recommendations: Array<{
+    action: string;
+    rationale: string;
+  }>;
+  metrics: {
+    turnCount: number;
+    hadNegativeFeedback: boolean;
+    answerCoverage: string;
+  };
+}
+
+export interface SearchSessionsRequest {
+  query?: string;
+  conversationId?: string;
+  userId?: string;
+  externalUserId?: string;
+  widgetIds?: string[];
+  source?: string;
+  feedback?: string | null;
+  isAnswered?: boolean;
+  fromDate?: string;
+  toDate?: string;
+  limit?: number;
+  offset?: number;
+  sortOrder?: 'asc' | 'desc';
+}

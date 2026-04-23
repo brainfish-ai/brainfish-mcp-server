@@ -12,7 +12,12 @@ import type {
   Catalog,
   SyncContentFile,
   SyncContentResult,
-  ArticleSuggestionTask
+  ArticleSuggestionTask,
+  SessionSummary,
+  SessionDetail,
+  TimelineEvent,
+  SessionInsights,
+  SearchSessionsRequest,
 } from './types.js';
 
 export class BrainfishClient {
@@ -338,6 +343,48 @@ export class BrainfishClient {
     return this.request(`/v1/documents/suggestions/${encodeURIComponent(suggestionId)}`, {
       method: 'PUT',
       body: params
+    });
+  }
+
+  // Sessions / Analytics
+  async searchSessions(params: SearchSessionsRequest): Promise<ApiResponse<SessionSummary[]>> {
+    return this.request('/v1/sessions/search', {
+      method: 'POST',
+      body: params
+    });
+  }
+
+  async getSession(id: string): Promise<{ data: SessionDetail; timestamp: string }> {
+    return this.request(`/v1/sessions/${encodeURIComponent(id)}`);
+  }
+
+  async getSessionTimeline(id: string, params?: {
+    limit?: number;
+    includeSessionContext?: boolean;
+    fromDate?: string;
+    toDate?: string;
+  }): Promise<{ data: TimelineEvent[]; timestamp: string }> {
+    const searchParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          searchParams.append(key, String(value));
+        }
+      });
+    }
+    const queryString = searchParams.toString();
+    const endpoint = queryString
+      ? `/v1/sessions/${encodeURIComponent(id)}/timeline?${queryString}`
+      : `/v1/sessions/${encodeURIComponent(id)}/timeline`;
+    return this.request(endpoint);
+  }
+
+  async generateSessionInsights(id: string, params?: {
+    force?: boolean;
+  }): Promise<{ data: SessionInsights; cached: boolean; timestamp: string }> {
+    return this.request(`/v1/sessions/${encodeURIComponent(id)}/insights`, {
+      method: 'POST',
+      body: params ?? {}
     });
   }
 

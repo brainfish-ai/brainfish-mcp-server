@@ -412,6 +412,73 @@ const TOOLS = {
       required: ['id']
     }
   },
+  // Sessions / Analytics
+  brainfish_search_sessions: {
+    name: 'brainfish_search_sessions',
+    description: 'Search chat sessions by query text and filters. Returns sessions (one per conversation) matching the criteria. Use this to find conversations where users asked about a specific topic.',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Text to search for in user queries (ILIKE match)' },
+        conversationId: { type: 'string', description: 'Filter by exact conversation ID' },
+        userId: { type: 'string', format: 'uuid', description: 'Filter by platform user ID' },
+        externalUserId: { type: 'string', description: 'Filter by external user ID' },
+        widgetIds: { type: 'array', items: { type: 'string', format: 'uuid' }, description: 'Filter by widget/agent IDs' },
+        source: { type: 'string', description: 'Filter by source (e.g. widget, api, help_center)' },
+        feedback: { type: 'string', enum: ['positive', 'negative'], nullable: true, description: 'Filter by feedback (null = no feedback)' },
+        isAnswered: { type: 'boolean', description: 'Filter by whether the query was answered' },
+        fromDate: { type: 'string', format: 'date-time', description: 'Start date (ISO 8601)' },
+        toDate: { type: 'string', format: 'date-time', description: 'End date (ISO 8601)' },
+        limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
+        offset: { type: 'number', minimum: 0, default: 0 },
+        sortOrder: { type: 'string', enum: ['asc', 'desc'], default: 'desc' }
+      },
+      required: []
+    }
+  },
+  brainfish_get_session: {
+    name: 'brainfish_get_session',
+    description: 'Get full conversation detail for a chat session: all turns (user query + AI answer + feedback) plus analytics metadata (start URL, session ID). Accepts a conversationId or searchQueryId.',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', minLength: 1, description: 'Conversation ID or search query ID' }
+      },
+      required: ['id']
+    }
+  },
+  brainfish_get_session_timeline: {
+    name: 'brainfish_get_session_timeline',
+    description: 'Get the chronological analytics event timeline for a conversation — includes page views, widget interactions, search events, and chat turns with their properties.',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', minLength: 1, description: 'Conversation ID' },
+        limit: { type: 'number', minimum: 1, maximum: 1000, default: 200 },
+        includeSessionContext: { type: 'boolean', default: true, description: 'Include session-level events (screen views, widget open/close) from the same session' },
+        fromDate: { type: 'string', format: 'date-time', description: 'Start date (ISO 8601)' },
+        toDate: { type: 'string', format: 'date-time', description: 'End date (ISO 8601)' }
+      },
+      required: ['id']
+    }
+  },
+  brainfish_generate_session_insights: {
+    name: 'brainfish_generate_session_insights',
+    description: 'Generate a structured LLM diagnosis of a chat session: root cause analysis, severity, evidence, and recommendations. Results are cached server-side (use force=true to regenerate).',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', minLength: 1, description: 'Conversation ID or search query ID' },
+        force: { type: 'boolean', default: false, description: 'Skip cache and regenerate insights' }
+      },
+      required: ['id']
+    }
+  },
+
   brainfish_sync_catalog_content: {
     name: 'brainfish_sync_catalog_content',
     description: 'Full sync of content files to a catalog. New files are created, changed files are updated, and files missing from the request are removed.',
@@ -547,6 +614,25 @@ async function handleToolCall(toolName: string, args: any, request: NextRequest)
 
     case 'brainfish_sync_catalog_content':
       return await client.syncCatalogContent(args.id, args.files);
+
+    // Sessions / Analytics
+    case 'brainfish_search_sessions': {
+      const { ...searchParams } = args;
+      return await client.searchSessions(searchParams);
+    }
+
+    case 'brainfish_get_session':
+      return await client.getSession(args.id);
+
+    case 'brainfish_get_session_timeline': {
+      const { id: timelineId, ...timelineParams } = args;
+      return await client.getSessionTimeline(timelineId, timelineParams);
+    }
+
+    case 'brainfish_generate_session_insights': {
+      const { id: insightId, ...insightParams } = args;
+      return await client.generateSessionInsights(insightId, insightParams);
+    }
 
     default:
       throw new Error(`Unknown tool: ${toolName}`);
@@ -792,6 +878,10 @@ export async function GET(request: NextRequest) {
       'Catalogs': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
         tools: ['brainfish_list_catalogs','brainfish_get_catalog','brainfish_create_catalog','brainfish_sync_catalog_content']
+      },
+      'Sessions & Analytics': {
+        icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4h-4z"/></svg>`,
+        tools: ['brainfish_search_sessions','brainfish_get_session','brainfish_get_session_timeline','brainfish_generate_session_insights']
       },
       'Auth': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`,
@@ -1418,7 +1508,7 @@ export async function GET(request: NextRequest) {
             <span class="step-num">3</span>
             <div class="step-body">
               <div class="step-title">Click Add — that's it</div>
-              <div class="step-desc">No OAuth required. Claude will immediately discover all 22 Brainfish tools.</div>
+              <div class="step-desc">No OAuth required. Claude will immediately discover all ${Object.keys(TOOLS).length} Brainfish tools.</div>
             </div>
           </div>
         </div>
