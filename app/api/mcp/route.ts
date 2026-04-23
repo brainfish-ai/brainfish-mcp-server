@@ -451,7 +451,7 @@ const TOOLS = {
   },
   brainfish_get_session_timeline: {
     name: 'brainfish_get_session_timeline',
-    description: 'Get the chronological analytics event timeline for a conversation — includes page views, widget interactions, search events, and chat turns with their properties.',
+    description: 'Get the chronological analytics event timeline for a conversation — includes page views, widget interactions, search events, and chat turns with their properties. Supports filtering by event name, geo, device, browser, and referrer.',
     annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
@@ -460,7 +460,15 @@ const TOOLS = {
         limit: { type: 'number', minimum: 1, maximum: 1000, default: 200 },
         includeSessionContext: { type: 'boolean', default: true, description: 'Include session-level events (screen views, widget open/close) from the same session' },
         fromDate: { type: 'string', format: 'date-time', description: 'Start date (ISO 8601)' },
-        toDate: { type: 'string', format: 'date-time', description: 'End date (ISO 8601)' }
+        toDate: { type: 'string', format: 'date-time', description: 'End date (ISO 8601)' },
+        eventNames: { type: 'array', items: { type: 'string' }, description: 'Filter by event name(s), e.g. ["screen_view", "Primary Field Search Submitted"]' },
+        country: { type: 'array', items: { type: 'string' }, description: 'Filter by country code(s), e.g. ["US", "CA"]' },
+        city: { type: 'array', items: { type: 'string' }, description: 'Filter by city name(s)' },
+        region: { type: 'array', items: { type: 'string' }, description: 'Filter by region/state name(s)' },
+        os: { type: 'array', items: { type: 'string' }, description: 'Filter by OS name(s), e.g. ["Mac OS", "Windows"]' },
+        browser: { type: 'array', items: { type: 'string' }, description: 'Filter by browser name(s), e.g. ["Chrome", "Safari"]' },
+        device: { type: 'array', items: { type: 'string' }, description: 'Filter by device type(s), e.g. ["desktop", "mobile"]' },
+        referrerType: { type: 'array', items: { type: 'string' }, description: 'Filter by referrer type(s), e.g. ["search", "social", "direct"]' }
       },
       required: ['id']
     }

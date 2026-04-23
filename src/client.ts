@@ -381,6 +381,14 @@ export class BrainfishClient {
     includeSessionContext?: boolean;
     fromDate?: string;
     toDate?: string;
+    eventNames?: string[];
+    country?: string[];
+    city?: string[];
+    region?: string[];
+    os?: string[];
+    browser?: string[];
+    device?: string[];
+    referrerType?: string[];
   }): Promise<{ data: TimelineEvent[]; timestamp: string }> {
     const searchParams = new URLSearchParams();
     if (params) {
