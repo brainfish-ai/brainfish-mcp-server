@@ -297,7 +297,7 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape') close
 </html>`;
 }
 
-const BRAINFISH_URL = process.env.BRAINFISH_URL || 'https://app.brainfi.sh';
+const BRAINFISH_APP_URL = process.env.BRAINFISH_APP_URL || 'https://app.brainfi.sh';
 const MCP_EXCHANGE_SECRET = process.env.MCP_EXCHANGE_SECRET ?? '';
 
 async function verifyMcpCode(token: string, secret: string): Promise<{ apiToken: string }> {
@@ -388,7 +388,7 @@ export async function GET(request: NextRequest) {
   // Branch 2 (mcp_code handled above): always show the consent page.
   // The client-side JS handles login via the modal if the session cookie is absent.
   return new NextResponse(
-    renderPage({ clientName, redirectUri, state, codeChallenge, codeChallengeMethod, clientId, appUrl: BRAINFISH_URL }),
+    renderPage({ clientName, redirectUri, state, codeChallenge, codeChallengeMethod, clientId, appUrl: BRAINFISH_APP_URL }),
     { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
   );
 }
