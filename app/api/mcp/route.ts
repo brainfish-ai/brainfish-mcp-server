@@ -437,6 +437,43 @@ const TOOLS = {
       },
       required: ['id', 'files']
     }
+  },
+
+  // Analytics
+  brainfish_get_analytics_threads: {
+    name: 'brainfish_get_analytics_threads',
+    description: 'List and filter conversation threads with analytics data (question, source, resolution status, conversation score). Requires a date range.',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        dateRange: {
+          type: 'object',
+          description: 'Date range filter (Unix timestamps in milliseconds)',
+          properties: {
+            from: { type: 'number', description: 'Start date as Unix timestamp (ms)' },
+            to: { type: 'number', description: 'End date as Unix timestamp (ms)' }
+          },
+          required: ['from', 'to']
+        },
+        limit: { type: 'number', minimum: 1, maximum: 100, default: 10, description: 'Number of threads to return' },
+        offset: { type: 'number', minimum: 0, default: 0, description: 'Pagination offset' },
+        sources: { type: 'array', items: { type: 'string' }, description: 'Filter by channel keys (source identifiers)' },
+        status: {
+          type: 'array',
+          items: { type: 'string', enum: ['answered', 'partial', 'unable_to_help', 'technical_issue', 'skipped'] },
+          description: 'Filter by resolution status'
+        },
+        feedback: {
+          type: 'array',
+          items: { type: 'string', enum: ['positive', 'negative'] },
+          description: 'Filter by user feedback type'
+        },
+        searchQuery: { type: 'string', description: 'Search within user messages across threads' },
+        actions: { type: 'array', items: { type: 'string' }, description: 'Filter by action types' }
+      },
+      required: ['dateRange']
+    }
   }
 };
 
@@ -547,6 +584,10 @@ async function handleToolCall(toolName: string, args: any, request: NextRequest)
 
     case 'brainfish_sync_catalog_content':
       return await client.syncCatalogContent(args.id, args.files);
+
+    // Analytics
+    case 'brainfish_get_analytics_threads':
+      return await client.getAnalyticsThreads(args);
 
     default:
       throw new Error(`Unknown tool: ${toolName}`);
@@ -792,6 +833,10 @@ export async function GET(request: NextRequest) {
       'Catalogs': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
         tools: ['brainfish_list_catalogs','brainfish_get_catalog','brainfish_create_catalog','brainfish_sync_catalog_content']
+      },
+      'Analytics': {
+        icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>`,
+        tools: ['brainfish_get_analytics_threads']
       },
       'Auth': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`,
