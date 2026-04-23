@@ -177,6 +177,7 @@ export class BrainfishClient {
     toDate?: number;
     widgetKeys?: string[];
     limit?: number;
+    includeSessionContext?: boolean;
   }): Promise<AnalyticsEnvelope<TimelineEvent[]>> {
     return this.requestAnalytics('/api/v1/events/timeline', params);
   }

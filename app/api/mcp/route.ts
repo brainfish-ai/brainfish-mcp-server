@@ -473,7 +473,7 @@ const TOOLS = {
   },
   brainfish_get_event_timeline: {
     name: 'brainfish_get_event_timeline',
-    description: 'Chronological event stream for a single scope — supply exactly one of conversationId, searchQueryId, userId, or sessionId. Returns every event (page views, searches, clicks, answers) with its properties.',
+    description: 'Chronological event stream for a single scope — supply exactly one of conversationId, searchQueryId, userId, or sessionId. By default, when scoping by conversationId or searchQueryId, also returns session-level navigation events (screen_view, Open/Close Widget, WIDGET_LOADED, session_start) from the same session so you see the full picture before and after the chat. Set includeSessionContext=false to get only the events explicitly tied to the scope.',
     annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
@@ -486,7 +486,8 @@ const TOOLS = {
         fromDate: { type: 'number', description: 'Unix seconds lower bound on created_at' },
         toDate: { type: 'number', description: 'Unix seconds upper bound on created_at' },
         widgetKeys: { type: 'array', items: { type: 'string' }, description: 'Optionally narrow to specific widgets' },
-        limit: { type: 'number', minimum: 1, maximum: 1000, default: 200 }
+        limit: { type: 'number', minimum: 1, maximum: 1000, default: 200 },
+        includeSessionContext: { type: 'boolean', default: true, description: 'For conversationId / searchQueryId scopes: also include session-level navigation events from the same session(s). No-op for userId / sessionId scopes.' }
       },
       required: ['teamId']
     }
