@@ -440,7 +440,7 @@ const TOOLS = {
   },
   brainfish_list_chat_sessions: {
     name: 'brainfish_list_chat_sessions',
-    description: 'List recent chat sessions (one per conversationId) with when the user started the session, the user id, and the linked search query IDs. Use this to find a conversationId before drilling in.',
+    description: 'List recent chat sessions (one per conversationId) with when the user started the session, the user id, the URL where the chat was started (startedAtUrl, resolved from the closest prior screen_view when the chat event itself has no URL), and the linked search query IDs. Use this to find a conversationId before drilling in.',
     annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
@@ -458,7 +458,7 @@ const TOOLS = {
   },
   brainfish_get_conversation: {
     name: 'brainfish_get_conversation',
-    description: 'Get chat-session detail for a single conversationId: start time, user id, session id, linked search query IDs, and (by default) the full event timeline. Use this to answer "why did this user ask this?"',
+    description: 'Get chat-session detail for a single conversationId: start time, user id, session id, linked search query IDs, the URL the chat was started from (startedAtUrl), and (by default) the full event timeline. Use this to answer "why did this user ask this?"',
     annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',

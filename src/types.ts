@@ -206,6 +206,12 @@ export interface ChatSessionSummary {
   sessionId: string;
   searchQueryIds: string[];
   eventCount: number;
+  /**
+   * URL where the conversation was started. Sourced from the chat-start event
+   * if populated, otherwise from the closest prior screen_view event in the
+   * same session. Empty string when no screen_view is available.
+   */
+  startedAtUrl: string;
 }
 
 export interface ConversationDetail {
@@ -214,6 +220,7 @@ export interface ConversationDetail {
   userId: string;
   sessionId: string;
   searchQueryIds: string[];
+  startedAtUrl: string;
   timeline?: TimelineEvent[];
 }
 
