@@ -85,6 +85,16 @@ interface MCPResponse {
 
 // Tool definitions
 const TOOLS = {
+  brainfish_getting_started: {
+    name: 'brainfish_getting_started',
+    description: 'Get a personalized getting-started playbook for the Brainfish MCP. Returns workflows with example prompts and the tools used for each. After calling this tool, you SHOULD call brainfish_list_collections and brainfish_list_documents to learn what is in the user\'s knowledge base, then re-present the playbook with example prompts rewritten to reference real collection names, document titles, and topics from their content. Format each workflow as a card the user can act on immediately.',
+    annotations: { readOnlyHint: true, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {},
+      required: []
+    }
+  },
   brainfish_search_documents: {
     name: 'brainfish_search_documents',
     description: 'Search documents in your Brainfish knowledge base using semantic search',
@@ -552,7 +562,89 @@ const TOOLS = {
   }
 };
 
+const GETTING_STARTED_SUGGESTIONS = [
+  {
+    title: 'Ask a question and get an AI-powered answer',
+    description: 'Generate answers grounded in your documentation, complete with source citations. Great for quickly finding information without reading through articles.',
+    examplePrompt: 'What is our refund policy?',
+    tools: ['brainfish_generate_answer', 'brainfish_generate_follow_ups'],
+    recommended: true
+  },
+  {
+    title: 'Search your knowledge base',
+    description: 'Use semantic search to find relevant documents across all your collections. Useful for locating specific content, checking what already exists, or gathering context for a task.',
+    examplePrompt: 'Search my knowledge base for articles about onboarding new customers.',
+    tools: ['brainfish_search_documents']
+  },
+  {
+    title: 'Audit and improve existing content',
+    description: 'Review documents in a collection and suggest improvements. Brainfish tracks suggestions separately so your team can review and approve changes before they go live.',
+    examplePrompt: 'List the documents in my "Getting Started" collection and suggest improvements for any that are outdated.',
+    tools: ['brainfish_list_collections', 'brainfish_list_documents', 'brainfish_get_document', 'brainfish_suggest_document_changes']
+  },
+  {
+    title: 'Draft a new help article',
+    description: 'Create a new document directly in your knowledge base. Combine with search to avoid duplicating existing content.',
+    examplePrompt: 'Write a help article about how to reset your password and add it to my support collection.',
+    tools: ['brainfish_search_documents', 'brainfish_create_document']
+  },
+  {
+    title: 'Sync external content into Brainfish',
+    description: 'Push content from external sources (code docs, READMEs, wikis) into a Brainfish catalog so it becomes searchable and available for AI answers.',
+    examplePrompt: 'Create a catalog called "API Docs" and sync my API reference content into it.',
+    tools: ['brainfish_create_catalog', 'brainfish_sync_catalog_content']
+  },
+  {
+    title: 'Discover knowledge gaps with the AI agent',
+    description: 'Feed content (like support tickets, chat logs, or meeting notes) to the Knowledge Discovery Agent. It analyses the content and suggests new articles or updates to existing ones.',
+    examplePrompt: 'Analyse this support conversation and suggest articles we should create or update based on it.',
+    tools: ['brainfish_generate_article_suggestion']
+  }
+];
+
+function formatGettingStartedResponse(): string {
+  const cards = GETTING_STARTED_SUGGESTIONS.map((s, i) => {
+    const badge = s.recommended ? ' ⭐ Recommended' : '';
+    const toolList = s.tools.map(t => `\`${t}\``).join(', ');
+    return [
+      `### ${i + 1}. ${s.title}${badge}`,
+      '',
+      s.description,
+      '',
+      `**Try it:** "${s.examplePrompt}"`,
+      '',
+      `**Tools used:** ${toolList}`,
+    ].join('\n');
+  }).join('\n\n---\n\n');
+
+  return [
+    '## 🐡 Brainfish MCP — Getting Started Playbook',
+    '',
+    'Here are the workflows you can run with the Brainfish MCP.',
+    'Pick one to try, or just copy an example prompt.',
+    '',
+    '---',
+    '',
+    cards,
+    '',
+    '---',
+    '',
+    '_Tip: Start with the ⭐ Recommended workflow to see Brainfish in action right away._',
+    '',
+    '---',
+    '',
+    '**Instructions for the assistant:** The example prompts above are generic placeholders.',
+    'To personalize this playbook, call `brainfish_list_collections` (and `brainfish_list_documents` for a sample from each collection) to discover what is in the user\'s knowledge base.',
+    'Then re-present this playbook replacing each "Try it" example with a concrete prompt that references real collection names, document titles, or topics from their content.',
+    'Format each workflow as a card with the personalized prompt ready to copy.',
+  ].join('\n');
+}
+
 async function handleToolCall(toolName: string, args: any, request: NextRequest) {
+  if (toolName === 'brainfish_getting_started') {
+    return formatGettingStartedResponse();
+  }
+
   const { apiToken, agentKey } = extractBrainfishCredentials(request);
   
   if (!apiToken) {
@@ -825,6 +917,7 @@ export async function POST(request: NextRequest) {
       case 'tools/call': {
         const { name, arguments: args } = body.params;
         const result = await handleToolCall(name, args, request);
+        const text = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
         
         return NextResponse.json({
           jsonrpc: '2.0',
@@ -832,7 +925,7 @@ export async function POST(request: NextRequest) {
           result: {
             content: [{
               type: 'text',
-              text: JSON.stringify(result, null, 2)
+              text
             }]
           }
         });
@@ -907,6 +1000,10 @@ export async function GET(request: NextRequest) {
   const accept = request.headers.get('accept') ?? '';
   if (accept.includes('text/html')) {
     const toolGroups: Record<string, { icon: string; tools: string[] }> = {
+      'Getting Started': {
+        icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+        tools: ['brainfish_getting_started']
+      },
       'Search & Documents': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
         tools: ['brainfish_search_documents','brainfish_get_document','brainfish_list_documents','brainfish_create_document','brainfish_update_document','brainfish_delete_document']
