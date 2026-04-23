@@ -862,6 +862,10 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const accept = request.headers.get('accept') ?? '';
   if (accept.includes('text/html')) {
+    // Detect whether the visitor already has an active Brainfish session cookie.
+    // The platform sets `accessToken` on `.brainfi.sh` so it is shared across subdomains.
+    const hasSession = !!request.cookies.get('accessToken')?.value;
+
     const toolGroups: Record<string, { icon: string; tools: string[] }> = {
       'Search & Documents': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>`,
@@ -920,6 +924,7 @@ export async function GET(request: NextRequest) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Brainfish MCP Server</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script>window.__BF_SESSION=${hasSession};</script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
@@ -1385,6 +1390,200 @@ export async function GET(request: NextRequest) {
       main { padding: 0 1rem 4rem; }
       .tools-grid { grid-template-columns: 1fr 1fr; }
     }
+
+    /* ── Setup MCP Modal ────────────────────────────────────────── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.55);
+      overflow: hidden;
+      animation: modal-in .18s ease;
+    }
+    @keyframes modal-in {
+      from { opacity: 0; transform: translateY(12px) scale(.97); }
+      to   { opacity: 1; transform: translateY(0)   scale(1); }
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem 0;
+    }
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .modal-close {
+      width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.07);
+      border: none;
+      border-radius: 50%;
+      color: var(--text-muted);
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      line-height: 1;
+    }
+    .modal-close:hover { background: rgba(255,255,255,.14); color: var(--text); }
+    .modal-body { padding: 1.25rem 1.5rem 1.5rem; }
+    .modal-sub {
+      font-size: .8125rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+    .mfield { margin-bottom: .875rem; }
+    .mfield label {
+      display: block;
+      font-size: .8125rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: .35rem;
+    }
+    .mfield input {
+      width: 100%;
+      padding: .625rem .875rem;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: .875rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .mfield input:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(163,230,53,.15);
+    }
+    .modal-error {
+      display: none;
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.35);
+      border-radius: 8px;
+      padding: .625rem .875rem;
+      font-size: .8125rem;
+      color: #f87171;
+      margin-bottom: .875rem;
+    }
+    .modal-error.visible { display: block; }
+    .mbtn {
+      width: 100%;
+      padding: .75rem;
+      background: var(--brand);
+      color: #171717;
+      font-weight: 700;
+      font-size: .9375rem;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+    }
+    .mbtn:hover { opacity: .88; transform: translateY(-1px); }
+    .mbtn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+    .mbtn-spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(23,23,23,.3);
+      border-top-color: #171717;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .mbtn.loading .mbtn-spinner { display: block; }
+    .mbtn.loading .mbtn-label { display: none; }
+
+    /* Step 2 — filled config */
+    .modal-step { display: none; }
+    .modal-step.active { display: block; }
+    .modal-success-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .375rem;
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--brand);
+      background: var(--brand-dim);
+      border: 1px solid rgba(163,230,53,.25);
+      border-radius: 9999px;
+      padding: .2rem .625rem;
+      margin-bottom: .875rem;
+    }
+    .modal-config {
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid #3c3c3c;
+      font-family: 'Consolas','Monaco','Menlo',monospace;
+      font-size: .8125rem;
+      line-height: 1.6;
+    }
+    .modal-config-bar {
+      background: #2d2d2d;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .5rem 1rem;
+      border-bottom: 1px solid #1e1e1e;
+    }
+    .modal-config-filename {
+      font-size: .75rem;
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .modal-config-copy {
+      font-size: .6875rem;
+      font-weight: 600;
+      color: rgba(255,255,255,.75);
+      background: rgba(255,255,255,.1);
+      border: none;
+      border-radius: 4px;
+      padding: .2rem .6rem;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .modal-config-copy:hover { background: rgba(255,255,255,.2); }
+    .modal-config-code {
+      background: #1e1e1e;
+      padding: 1rem 1.25rem;
+      overflow-x: auto;
+    }
+    .modal-config-code pre { margin: 0; color: #d4d4d4; white-space: pre; }
+    .modal-restart {
+      display: block;
+      text-align: center;
+      font-size: .8125rem;
+      color: var(--text-dim);
+      margin-top: 1rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+    }
+    .modal-restart:hover { color: var(--text-muted); }
+    .mbtn + .mbtn { margin-top: .625rem; }
   </style>
 </head>
 <body>
@@ -1416,7 +1615,7 @@ export async function GET(request: NextRequest) {
     <span class="copy-hint">click to copy</span>
   </div>
   <div class="hero-actions">
-    <a class="btn btn-primary" href="https://app.brainfi.sh" target="_blank" rel="noopener">Get API Token</a>
+    <button class="btn btn-primary" onclick="openSetupModal()">Get API Token</button>
     <a class="btn btn-secondary" href="https://github.com/brainfish-ai/brainfish-mcp-server" target="_blank" rel="noopener">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12c0-6.63-5.37-12-12-12"/></svg>
       View on GitHub
@@ -1549,7 +1748,215 @@ function switchTab(btn, panel) {
   btn.classList.add('active');
   document.getElementById('setup-' + panel).classList.add('active');
 }
+
+// ── Setup MCP Modal ──────────────────────────────────────────────
+function openSetupModal() {
+  var overlay = document.getElementById('setup-modal');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  clearModalError();
+
+  if (window.__BF_SESSION) {
+    // User is already logged into Brainfish — skip all input, auto-generate now.
+    showModalStep('loading');
+    callSetupToken({});
+  } else {
+    // Not logged in — show the prompt to log in first.
+    showModalStep('login');
+  }
+}
+
+function closeSetupModal() {
+  document.getElementById('setup-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function showModalStep(name) {
+  document.querySelectorAll('.modal-step').forEach(function(s) { s.classList.remove('active'); });
+  document.getElementById('modal-step-' + name).classList.add('active');
+}
+
+function clearModalError() {
+  var el = document.getElementById('modal-error');
+  el.textContent = '';
+  el.classList.remove('visible');
+}
+
+function showModalError(msg) {
+  var el = document.getElementById('modal-error');
+  el.textContent = msg;
+  el.classList.add('visible');
+}
+
+async function retryAfterLogin() {
+  clearModalError();
+  showModalStep('loading');
+  // Re-request the page to pick up the fresh cookie, then re-check.
+  try {
+    var checkRes = await fetch(window.location.href, { credentials: 'include' });
+    if (checkRes.ok) {
+      // If the server can see the cookie now the page will have __BF_SESSION=true;
+      // we can't re-evaluate that without a reload, so just attempt the token call.
+      callSetupToken({});
+    } else {
+      showModalStep('login');
+      showModalError('Still not logged in. Please complete sign-in and try again.');
+    }
+  } catch (e) {
+    callSetupToken({});
+  }
+}
+
+async function callSetupToken(body) {
+  try {
+    var res = await fetch('/api/setup-token', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+
+    var data = await res.json();
+
+    if (!res.ok || data.error) {
+      if (data.unauthenticated) {
+        showModalStep('login');
+        showModalError('Your session has expired. Please log in again and try.');
+      } else {
+        showModalStep('login');
+        showModalError(data.error || 'Something went wrong. Please try again.');
+      }
+      return;
+    }
+
+    populateConfig(data.apiToken || '');
+  } catch (err) {
+    showModalStep('login');
+    showModalError('Network error. Please check your connection and try again.');
+  }
+}
+
+function populateConfig(apiToken) {
+  var lines = [
+    '{',
+    '  <span class="tok-key">&quot;mcpServers&quot;</span><span class="tok-brace">: {</span>',
+    '    <span class="tok-key">&quot;brainfish&quot;</span><span class="tok-brace">: {</span>',
+    '      <span class="tok-key">&quot;url&quot;</span><span class="tok-brace">:</span> <span class="tok-str">&quot;https://mcp.brainfi.sh&quot;</span><span class="tok-brace">,</span>',
+    '      <span class="tok-key">&quot;headers&quot;</span><span class="tok-brace">: {</span>',
+    '        <span class="tok-key">&quot;Authorization&quot;</span><span class="tok-brace">:</span> <span class="tok-str">&quot;Bearer ' + escHtml(apiToken) + '&quot;</span>',
+    '      <span class="tok-brace">}</span>',
+    '    <span class="tok-brace">}</span>',
+    '  <span class="tok-brace">}</span>',
+    '<span class="tok-brace">}</span>'
+  ];
+  document.getElementById('modal-config-pre').innerHTML = lines.join('\\n');
+
+  var plainConfig = JSON.stringify({
+    mcpServers: {
+      brainfish: {
+        url: 'https://mcp.brainfi.sh',
+        headers: { Authorization: 'Bearer ' + apiToken }
+      }
+    }
+  }, null, 2);
+  document.getElementById('modal-config-pre').dataset.plain = plainConfig;
+
+  showModalStep('result');
+}
+
+function copyFilledConfig() {
+  var pre = document.getElementById('modal-config-pre');
+  var text = pre.dataset.plain || pre.innerText;
+  var btn  = document.getElementById('modal-copy-btn');
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = 'Copied!';
+    setTimeout(function() { btn.textContent = 'Copy'; }, 1800);
+  });
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// Close on backdrop click
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('setup-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSetupModal();
+  });
+});
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeSetupModal();
+});
 </script>
+
+<!-- Setup MCP Modal -->
+<div id="setup-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal-card">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Setup MCP</span>
+      <button class="modal-close" onclick="closeSetupModal()" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Loading: auto-generating token from session -->
+      <div id="modal-step-loading" class="modal-step">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 0;gap:1rem">
+          <div style="width:36px;height:36px;border:3px solid rgba(163,230,53,.2);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite"></div>
+          <p class="modal-sub" style="margin:0;text-align:center">Creating your <strong style="color:var(--text)">Cursor MCP</strong> key…</p>
+        </div>
+      </div>
+
+      <!-- Not logged in: prompt to sign in -->
+      <div id="modal-step-login" class="modal-step">
+        <div style="text-align:center;padding:.5rem 0 1rem">
+          <div style="width:48px;height:48px;background:var(--brand-dim);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          </div>
+          <p class="modal-sub">You need to be logged into the Brainfish platform first. Once you're signed in, we'll auto-generate your MCP config.</p>
+        </div>
+
+        <div id="modal-error" class="modal-error"></div>
+
+        <a href="https://app.brainfi.sh" target="_blank" rel="noopener" class="mbtn" style="text-decoration:none;margin-bottom:.75rem">
+          Log in to Brainfish →
+        </a>
+        <button class="mbtn" onclick="retryAfterLogin()" style="background:var(--surface);color:var(--text);border:1px solid var(--border)">
+          I'm logged in — create my config
+        </button>
+      </div>
+
+      <!-- Result: filled mcp.json -->
+      <div id="modal-step-result" class="modal-step">
+        <div class="modal-success-badge">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#a3e635"/><path d="M3 5.2l1.3 1.3L7 3.5" stroke="#171717" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Token created
+        </div>
+        <p class="modal-sub" style="margin-bottom:.75rem">Copy the config below and paste it into your <code style="font-family:monospace;font-size:.75rem;background:rgba(255,255,255,.08);padding:.1rem .4rem;border-radius:4px">mcp.json</code> file.</p>
+
+        <div class="modal-config">
+          <div class="modal-config-bar">
+            <span class="modal-config-filename">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#e8c27a" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              mcp.json
+            </span>
+            <button class="modal-config-copy" id="modal-copy-btn" onclick="copyFilledConfig()">Copy</button>
+          </div>
+          <div class="modal-config-code">
+            <pre id="modal-config-pre"></pre>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 </body>
 </html>`;
     return new NextResponse(html, {
