@@ -1921,7 +1921,45 @@ function populateConfig(apiToken) {
   }, null, 2);
   document.getElementById('modal-config-pre').dataset.plain = plainConfig;
 
+  // Build the Cursor deep-link config (just the server entry, not the mcpServers wrapper)
+  var cursorConfig = JSON.stringify({
+    url: 'https://mcp.brainfi.sh',
+    headers: { Authorization: 'Bearer ' + apiToken }
+  });
+  document.getElementById('modal-cursor-btn').dataset.cursorConfig = cursorConfig;
+
+  // Store token for .mcpb download
+  document.getElementById('modal-claude-btn').dataset.apiToken = apiToken;
+
   showModalStep('result');
+}
+
+function installInCursor() {
+  var btn = document.getElementById('modal-cursor-btn');
+  var config = btn.dataset.cursorConfig || '';
+  var encoded = btoa(unescape(encodeURIComponent(config)));
+  var url = 'cursor://anysphere.cursor-deeplink/mcp/install?name=brainfish&config=' + encoded;
+  window.location.href = url;
+}
+
+function addToClaude() {
+  var btn = document.getElementById('modal-claude-btn');
+  var token = btn.dataset.apiToken || '';
+  if (!token) return;
+  // Trigger .mcpb file download — user double-clicks it and Claude Desktop installs instantly.
+  var a = document.createElement('a');
+  a.href = '/api/download-mcpb?token=' + encodeURIComponent(token);
+  a.download = 'brainfish.mcpb';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  // Briefly update the button label as feedback
+  var original = btn.innerHTML;
+  btn.textContent = 'Downloading…';
+  setTimeout(function() { btn.innerHTML = original; }, 2000);
+  // Show the install hint
+  var hint = document.getElementById('modal-claude-hint');
+  if (hint) { hint.style.display = 'block'; }
 }
 
 function copyFilledConfig() {
@@ -2007,7 +2045,27 @@ document.addEventListener('keydown', function(e) {
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="5" fill="#a3e635"/><path d="M3 5.2l1.3 1.3L7 3.5" stroke="#171717" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Token created
         </div>
-        <p class="modal-sub" style="margin-bottom:.75rem">Copy the config below and paste it into your <code style="font-family:monospace;font-size:.75rem;background:rgba(255,255,255,.08);padding:.1rem .4rem;border-radius:4px">mcp.json</code> file.</p>
+
+        <!-- One-click install buttons -->
+        <div style="display:flex;gap:.625rem;margin-bottom:.75rem;">
+          <button id="modal-cursor-btn" onclick="installInCursor()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;background:#fff;color:#111;border:none;border-radius:8px;font-size:.8125rem;font-weight:600;padding:.6rem .5rem;cursor:pointer;">
+            <svg width="15" height="15" viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="6" fill="#111"/><path d="M8 8l8 8-8 8M16 24h8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Add to Cursor
+          </button>
+          <button id="modal-claude-btn" onclick="addToClaude()" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.5rem;background:linear-gradient(135deg,#cc785c,#b5623e);color:#fff;border:none;border-radius:8px;font-size:.8125rem;font-weight:600;padding:.6rem .5rem;cursor:pointer;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            Add to Claude
+          </button>
+          <button onclick="copyFilledConfig()" id="modal-copy-btn" style="display:flex;align-items:center;justify-content:center;gap:.4rem;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.13);border-radius:8px;font-size:.8125rem;font-weight:500;padding:.6rem .75rem;cursor:pointer;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            Copy
+          </button>
+        </div>
+
+        <!-- Claude Desktop install hint — shown after download starts -->
+        <div id="modal-claude-hint" style="display:none;background:rgba(204,120,92,.12);border:1px solid rgba(204,120,92,.3);border-radius:7px;padding:.55rem .75rem;margin-bottom:.75rem;font-size:.75rem;color:#e8a98a;line-height:1.6;">
+          Double-click the downloaded <code style="font-family:monospace;background:rgba(0,0,0,.25);padding:.05rem .3rem;border-radius:3px">brainfish.mcpb</code> file to install it in Claude Desktop.
+        </div>
 
         <div class="modal-config">
           <div class="modal-config-bar">
@@ -2015,7 +2073,6 @@ document.addEventListener('keydown', function(e) {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#e8c27a" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
               mcp.json
             </span>
-            <button class="modal-config-copy" id="modal-copy-btn" onclick="copyFilledConfig()">Copy</button>
           </div>
           <div class="modal-config-code">
             <pre id="modal-config-pre"></pre>
