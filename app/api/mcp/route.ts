@@ -1630,6 +1630,15 @@ export async function GET(request: NextRequest) {
     }
     .modal-restart:hover { color: var(--text-muted); }
     .mbtn + .mbtn { margin-top: .625rem; }
+    .mbtn-google {
+      background: #fff;
+      color: #3c4043;
+      font-weight: 500;
+      border: 1px solid #dadce0;
+      gap: .625rem;
+    }
+    .mbtn-google:hover { background: #f8f8f8; opacity: 1; }
+
   </style>
 </head>
 <body>
@@ -1801,20 +1810,18 @@ function openSetupModal() {
   overlay.classList.add('open');
   document.body.style.overflow = 'hidden';
   clearModalError();
-
-  if (window.__BF_SESSION) {
-    // User is already logged into Brainfish — skip all input, auto-generate now.
-    showModalStep('loading');
-    callSetupToken({});
-  } else {
-    // Not logged in — show the prompt to log in first.
-    showModalStep('login');
-  }
+  // Always attempt token generation first — cookie may exist from a prior login
+  // even if the page was loaded before the session was established.
+  // callSetupToken will fall back to the login step if auth fails.
+  showModalStep('loading');
+  callSetupToken({});
 }
 
 function closeSetupModal() {
   document.getElementById('setup-modal').classList.remove('open');
   document.body.style.overflow = '';
+  if (__loginTimer) { clearInterval(__loginTimer); __loginTimer = null; }
+  if (__loginPopup && !__loginPopup.closed) { __loginPopup.close(); __loginPopup = null; }
 }
 
 function showModalStep(name) {
@@ -1834,23 +1841,75 @@ function showModalError(msg) {
   el.classList.add('visible');
 }
 
-async function retryAfterLogin() {
-  clearModalError();
+var __loginPopup = null;
+var __loginTimer = null;
+
+// Listen for the platform to signal successful login via postMessage.
+// The platform page should call: window.opener?.postMessage({ type: 'bf:auth-complete' }, '*')
+// This closes the popup immediately without waiting for cookie polling.
+window.addEventListener('message', function(event) {
+  if (!event.data || event.data.type !== 'bf:auth-complete') return;
+  if (__loginTimer) { clearInterval(__loginTimer); __loginTimer = null; }
+  if (__loginPopup && !__loginPopup.closed) { __loginPopup.close(); }
+  __loginPopup = null;
   showModalStep('loading');
-  // Re-request the page to pick up the fresh cookie, then re-check.
-  try {
-    var checkRes = await fetch(window.location.href, { credentials: 'include' });
-    if (checkRes.ok) {
-      // If the server can see the cookie now the page will have __BF_SESSION=true;
-      // we can't re-evaluate that without a reload, so just attempt the token call.
-      callSetupToken({});
-    } else {
-      showModalStep('login');
-      showModalError('Still not logged in. Please complete sign-in and try again.');
-    }
-  } catch (e) {
-    callSetupToken({});
+  callSetupToken({});
+});
+
+function openLoginPopup(provider) {
+  clearModalError();
+  var authUrl = provider === 'email' ? '${appUrl}/auth/email' : '${appUrl}/auth/google';
+  var w = 520, h = 640;
+  var left = Math.max(0, (screen.width  - w) / 2);
+  var top  = Math.max(0, (screen.height - h) / 2);
+  __loginPopup = window.open(
+    authUrl,
+    'brainfish-login',
+    'width=' + w + ',height=' + h + ',left=' + left + ',top=' + top + ',toolbar=no,menubar=no'
+  );
+  if (!__loginPopup) {
+    // Popup blocked — fall back to new tab
+    window.open(authUrl, '_blank');
+    showModalError('Popup blocked. Please allow popups and try again, or log in and click "I\\u2019m logged in" below.');
+    return;
   }
+  showModalStep('waiting');
+  // Detect popup close (user manually closed it or window.close() was called by the platform).
+  __loginTimer = setInterval(function() {
+    if (!__loginPopup || __loginPopup.closed) {
+      clearInterval(__loginTimer);
+      __loginTimer = null;
+      __loginPopup = null;
+      showModalStep('loading');
+      callSetupToken({});
+    }
+  }, 500);
+}
+
+function doneLogin() {
+  // User clicked after completing login in the popup — close popup and generate config.
+  if (__loginTimer) { clearInterval(__loginTimer); __loginTimer = null; }
+  if (__loginPopup && !__loginPopup.closed) { __loginPopup.close(); }
+  __loginPopup = null;
+  showModalStep('loading');
+  callSetupToken({});
+}
+
+async function logoutBF() {
+  var btn = document.getElementById('modal-logout-btn');
+  if (btn) { btn.textContent = 'Logging out…'; btn.disabled = true; btn.style.opacity = '0.5'; }
+  await fetch('/api/logout', { method: 'POST', credentials: 'include' }).catch(() => null);
+  // Also attempt client-side cookie removal (works when not HttpOnly).
+  document.cookie = 'accessToken=; Max-Age=0; path=/';
+  closeSetupModal();
+}
+
+function cancelLoginPopup() {
+  if (__loginTimer) { clearInterval(__loginTimer); __loginTimer = null; }
+  if (__loginPopup && !__loginPopup.closed) { __loginPopup.close(); }
+  __loginPopup = null;
+  showModalStep('login');
+  clearModalError();
 }
 
 async function callSetupToken(body) {
@@ -1964,17 +2023,27 @@ document.addEventListener('keydown', function(e) {
           <div style="width:48px;height:48px;background:var(--brand-dim);border-radius:12px;display:inline-flex;align-items:center;justify-content:center;margin-bottom:1rem">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
           </div>
-          <p class="modal-sub">You need to be logged into the Brainfish platform first. Once you're signed in, we'll auto-generate your MCP config.</p>
+          <p class="modal-sub">Sign in to Brainfish to automatically generate your MCP config.</p>
         </div>
 
         <div id="modal-error" class="modal-error"></div>
 
-        <a href="${appUrl}/home" target="_blank" rel="noopener" class="mbtn" style="text-decoration:none;margin-bottom:.75rem">
-          Log in to Brainfish →
-        </a>
-        <button class="mbtn" onclick="retryAfterLogin()" style="background:var(--surface);color:var(--text);border:1px solid var(--border)">
-          I'm logged in — create my config
+        <button class="mbtn mbtn-google" onclick="openLoginPopup('google')">
+          <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z" fill="#34A853"/><path d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z" fill="#EA4335"/></svg>
+          Continue with Google
         </button>
+      </div>
+
+      <!-- Waiting: popup opened, polling for login completion -->
+      <div id="modal-step-waiting" class="modal-step">
+        <div style="text-align:center;padding:.75rem 0 .5rem">
+          <div style="width:36px;height:36px;border:3px solid rgba(163,230,53,.2);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem"></div>
+          <p class="modal-sub" style="margin-bottom:1.5rem">A sign-in window has opened.<br/>Complete your login there, then click below.</p>
+          <button class="mbtn" onclick="doneLogin()" style="margin-bottom:.625rem">
+            I've signed in — create my config
+          </button>
+          <button onclick="cancelLoginPopup()" style="font-size:.8125rem;color:var(--text-dim);background:none;border:none;cursor:pointer;width:100%">Cancel</button>
+        </div>
       </div>
 
       <!-- Result: filled mcp.json -->
@@ -1997,6 +2066,10 @@ document.addEventListener('keydown', function(e) {
             <pre id="modal-config-pre"></pre>
           </div>
         </div>
+
+        <button id="modal-logout-btn" onclick="logoutBF()" style="display:block;margin-top:1.25rem;width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;font-size:.875rem;font-weight:500;color:#fff;cursor:pointer;padding:.6rem 0;transition:background .15s;">
+          Log out
+        </button>
       </div>
 
     </div>
