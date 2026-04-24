@@ -553,6 +553,24 @@ const TOOLS = {
   }
 };
 
+const SENSITIVE_KEYS = new Set(['text', 'content', 'query', 'title', 'reason', 'files']);
+
+function redactSensitiveArgs(args: Record<string, unknown>): Record<string, unknown> {
+  const safe: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(args)) {
+    if (SENSITIVE_KEYS.has(key)) {
+      safe[key] = typeof value === 'string'
+        ? `[redacted, ${value.length} chars]`
+        : Array.isArray(value)
+          ? `[redacted, ${value.length} items]`
+          : '[redacted]';
+    } else {
+      safe[key] = value;
+    }
+  }
+  return safe;
+}
+
 async function handleToolCall(toolName: string, args: any, request: NextRequest) {
   const { apiToken, agentKey } = extractBrainfishCredentials(request);
   
@@ -825,18 +843,24 @@ export async function POST(request: NextRequest) {
         
       case 'tools/call': {
         const { name, arguments: args } = body.params;
-        const result = await handleToolCall(name, args, request);
-        
-        return NextResponse.json({
-          jsonrpc: '2.0',
-          id: body.id,
-          result: {
-            content: [{
-              type: 'text',
-              text: JSON.stringify(result, null, 2)
-            }]
-          }
-        });
+        try {
+          const result = await handleToolCall(name, args, request);
+          
+          return NextResponse.json({
+            jsonrpc: '2.0',
+            id: body.id,
+            result: {
+              content: [{
+                type: 'text',
+                text: JSON.stringify(result, null, 2)
+              }]
+            }
+          });
+        } catch (toolError) {
+          const safeArgs = redactSensitiveArgs(args);
+          console.error(`MCP tool error [${name}]:`, toolError, '\nArguments:', JSON.stringify(safeArgs));
+          return handleBrainfishError(toolError);
+        }
       }
 
       case 'resources/list':
