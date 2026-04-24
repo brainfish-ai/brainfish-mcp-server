@@ -415,7 +415,7 @@ const TOOLS = {
   // Sessions / Analytics
   brainfish_search_sessions: {
     name: 'brainfish_search_sessions',
-    description: 'Search chat sessions by query text and filters. Returns sessions (one per conversation) matching the criteria. Use this to find conversations where users asked about a specific topic.',
+    description: 'Search chat sessions by query text and filters. Returns sessions (one per conversation) with full conversation turns included by default, so you can read the questions and answers without needing follow-up calls.',
     annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
@@ -432,7 +432,8 @@ const TOOLS = {
         toDate: { type: 'string', format: 'date-time', description: 'End date (ISO 8601)' },
         limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
         offset: { type: 'number', minimum: 0, default: 0 },
-        sortOrder: { type: 'string', enum: ['asc', 'desc'], default: 'desc' }
+        sortOrder: { type: 'string', enum: ['asc', 'desc'], default: 'desc' },
+        includeTurns: { type: 'boolean', default: true, description: 'Include full conversation turns (query, answer, feedback) in each result. Defaults to true.' }
       },
       required: []
     }
@@ -662,8 +663,8 @@ async function handleToolCall(toolName: string, args: any, request: NextRequest)
 
     // Sessions / Analytics
     case 'brainfish_search_sessions': {
-      const { ...searchParams } = args;
-      return await client.searchSessions(searchParams);
+      const { includeTurns = true, ...searchParams } = args;
+      return await client.searchSessions({ ...searchParams, includeTurns });
     }
 
     case 'brainfish_get_session':
