@@ -198,6 +198,7 @@ export interface SessionSummary {
   externalUserId: string | null;
   source: string | null;
   widgetId: string | null;
+  turns?: SessionTurn[];
 }
 
 export interface SessionTurn {
@@ -278,6 +279,7 @@ export interface SearchSessionsRequest {
   limit?: number;
   offset?: number;
   sortOrder?: 'asc' | 'desc';
+  includeTurns?: boolean;
 }
 
 export interface AnalyticsThread {
