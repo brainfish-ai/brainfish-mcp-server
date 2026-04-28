@@ -114,55 +114,6 @@ const TOOLS = {
       required: ['id']
     }
   },
-  brainfish_suggest_document_changes: {
-    name: 'brainfish_suggest_document_changes',
-    description: 'Create a suggestion to improve or update an existing document',
-    annotations: { readOnlyHint: false, destructiveHint: false },
-    inputSchema: {
-      type: 'object',
-      properties: {
-        documentId: { type: 'string', minLength: 1 },
-        title: { type: 'string' },
-        text: { type: 'string', minLength: 1 },
-        reason: { type: 'string', default: '' },
-        source: { type: 'string', default: 'mcp_client' },
-        sourceId: { type: 'string' }
-      },
-      required: ['documentId', 'text']
-    }
-  },
-  brainfish_suggest_new_document: {
-    name: 'brainfish_suggest_new_document',
-    description: 'Suggest creating a new document (requires existing document as base for suggestion system)',
-    annotations: { readOnlyHint: false, destructiveHint: false },
-    inputSchema: {
-      type: 'object',
-      properties: {
-        baseDocumentId: { type: 'string', minLength: 1 },
-        title: { type: 'string', minLength: 1 },
-        text: { type: 'string', minLength: 1 },
-        reason: { type: 'string', default: 'Suggested new document creation' },
-        source: { type: 'string', default: 'mcp_client' },
-        collectionId: { type: 'string' }
-      },
-      required: ['baseDocumentId', 'title', 'text']
-    }
-  },
-  brainfish_update_suggestion: {
-    name: 'brainfish_update_suggestion',
-    description: 'Update an existing document suggestion',
-    annotations: { readOnlyHint: false, destructiveHint: false },
-    inputSchema: {
-      type: 'object',
-      properties: {
-        suggestionId: { type: 'string', format: 'uuid' },
-        title: { type: 'string' },
-        text: { type: 'string' },
-        reason: { type: 'string' }
-      },
-      required: ['suggestionId']
-    }
-  },
   brainfish_generate_answer: {
     name: 'brainfish_generate_answer',
     description: 'Generate streaming AI-powered answers from your knowledge base',
@@ -587,27 +538,7 @@ async function handleToolCall(toolName: string, args: any, request: NextRequest)
       
     case 'brainfish_get_document':
       return await client.getDocument(args.id);
-      
-    case 'brainfish_suggest_document_changes':
-      const { documentId, ...suggestionParams } = args;
-      return await client.createDocumentSuggestion(documentId, suggestionParams);
-      
-    case 'brainfish_suggest_new_document':
-      const { baseDocumentId, title, text, reason, source, collectionId } = args;
-      // For new document suggestions, we create a suggestion on a base document
-      // with clear indication it's for new content
-      const newDocSuggestion = {
-        title: `[NEW DOCUMENT] ${title}`,
-        text: `# Suggested New Document: ${title}\n\n${text}\n\n---\n*Suggested Collection: ${collectionId || 'Default'}*`,
-        reason: `${reason} - This is a suggestion for creating a new document.`,
-        source: source || 'mcp_client'
-      };
-      return await client.createDocumentSuggestion(baseDocumentId, newDocSuggestion);
-      
-    case 'brainfish_update_suggestion':
-      const { suggestionId, ...updateParams } = args;
-      return await client.updateDocumentSuggestion(suggestionId, updateParams);
-      
+
     case 'brainfish_generate_answer':
       if (!agentKey) {
         throw new Error('Agent key is required for AI answer generation. Find your agent key in the Brainfish dashboard under Agents.');
@@ -938,7 +869,7 @@ export async function GET(request: NextRequest) {
       },
       'Suggestions': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`,
-        tools: ['brainfish_suggest_document_changes','brainfish_suggest_new_document','brainfish_update_suggestion','brainfish_generate_article_suggestion']
+        tools: ['brainfish_generate_article_suggestion']
       },
       'Collections': {
         icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>`,

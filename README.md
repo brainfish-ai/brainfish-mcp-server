@@ -119,7 +119,7 @@ Authorization: Bearer bf_api_YOUR_TOKEN
 
 ---
 
-## Available Tools (26)
+## Available Tools (23)
 
 ### Search & Documents
 
@@ -136,9 +136,6 @@ Authorization: Bearer bf_api_YOUR_TOKEN
 
 | Tool | Description |
 |---|---|
-| `brainfish_suggest_document_changes` | Propose edits to an existing document (goes through review) |
-| `brainfish_suggest_new_document` | Suggest a new document for creation |
-| `brainfish_update_suggestion` | Update a pending suggestion before review |
 | `brainfish_generate_article_suggestion` | Trigger AI-powered article suggestions from content (async) |
 
 ### Collections
