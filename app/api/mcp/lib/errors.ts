@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { BrainfishApiError } from '../../../../src/client';
+import { BrainfishApiError } from '@/src/client';
 
 export function handleBrainfishError(error: unknown) {
   if (error instanceof BrainfishApiError) {

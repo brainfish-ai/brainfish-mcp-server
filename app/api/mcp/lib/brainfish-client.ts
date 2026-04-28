@@ -1,5 +1,5 @@
-import { BrainfishClient } from '../../../../src/client';
-import type { BrainfishSessionData } from '../../../../src/types';
+import { BrainfishClient } from '@/src/client';
+import type { BrainfishSessionData } from '@/src/types';
 
 export function createBrainfishClient(
   session: BrainfishSessionData,

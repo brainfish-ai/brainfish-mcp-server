@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NextRequest } from 'next/server';
-import { BrainfishApiError, BrainfishClient } from '../../../src/client';
+import { BrainfishApiError, BrainfishClient } from '@/src/client';
 import { WWW_AUTHENTICATE } from './lib/credentials';
 import { GET, OPTIONS, POST } from './route';
 
-vi.mock('../../../src/client', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('../../../src/client')>();
+vi.mock('@/src/client', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('@/src/client')>();
   return { ...mod, BrainfishClient: vi.fn() };
 });
 
