@@ -6,7 +6,6 @@ import type {
   Document,
   DocumentListItem,
   Collection,
-  DocumentSuggestion,
   SearchResult,
   StreamingEvent,
   Catalog,
@@ -335,31 +334,6 @@ export class BrainfishClient {
   }): Promise<ApiResponse<ArticleSuggestionTask>> {
     return this.request('/v1/documents/suggestion', {
       method: 'POST',
-      body: params
-    });
-  }
-
-  // Document Suggestions
-  async createDocumentSuggestion(documentId: string, params: {
-    title?: string;
-    text: string;
-    reason?: string;
-    source?: string;
-    sourceId?: string;
-  }): Promise<ApiResponse<DocumentSuggestion>> {
-    return this.request(`/v1/documents/${encodeURIComponent(documentId)}/suggestions`, {
-      method: 'POST',
-      body: params
-    });
-  }
-
-  async updateDocumentSuggestion(suggestionId: string, params: {
-    title?: string;
-    text?: string;
-    reason?: string;
-  }): Promise<ApiResponse<DocumentSuggestion>> {
-    return this.request(`/v1/documents/suggestions/${encodeURIComponent(suggestionId)}`, {
-      method: 'PUT',
       body: params
     });
   }

@@ -97,23 +97,6 @@ export const deleteCollectionSchema = z.object({
   id: z.string().min(1)
 });
 
-// Document Suggestion schemas
-export const createDocumentSuggestionSchema = z.object({
-  documentId: z.string().min(1),
-  title: z.string().optional(),
-  text: z.string().min(1),
-  reason: z.string().optional().default(''),
-  source: z.string().optional(),
-  sourceId: z.string().optional()
-});
-
-export const updateDocumentSuggestionSchema = z.object({
-  suggestionId: z.string().uuid(),
-  title: z.string().optional(),
-  text: z.string().optional(),
-  reason: z.string().optional()
-});
-
 // Analytics schemas
 export const getAnalyticsThreadsSchema = z.object({
   dateRange: z.object({

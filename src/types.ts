@@ -99,20 +99,6 @@ export interface Collection {
   deletedAt?: string;
 }
 
-export interface DocumentSuggestion {
-  id: string;
-  documentId: string;
-  title?: string;
-  text: string;
-  reason: string;
-  source?: string;
-  sourceId?: string;
-  createdAt: string;
-  acceptedAt?: string;
-  rejectedAt?: string;
-  staledAt?: string;
-}
-
 export interface SearchResult {
   id: string;
   title: string;
