@@ -5,6 +5,7 @@ import {
   extractBrainfishCredentials,
   WWW_AUTHENTICATE,
 } from './lib/credentials';
+import { redactSensitiveArgs } from './lib/redact';
 
 function createBrainfishClient(session: BrainfishSessionData): BrainfishClient {
   if (!session.apiToken) {
@@ -470,24 +471,6 @@ const TOOLS = {
     }
   }
 };
-
-const SENSITIVE_KEYS = new Set(['text', 'content', 'query', 'title', 'reason', 'files']);
-
-function redactSensitiveArgs(args: Record<string, unknown>): Record<string, unknown> {
-  const safe: Record<string, unknown> = {};
-  for (const [key, value] of Object.entries(args)) {
-    if (SENSITIVE_KEYS.has(key)) {
-      safe[key] = typeof value === 'string'
-        ? `[redacted, ${value.length} chars]`
-        : Array.isArray(value)
-          ? `[redacted, ${value.length} items]`
-          : '[redacted]';
-    } else {
-      safe[key] = value;
-    }
-  }
-  return safe;
-}
 
 async function handleToolCall(toolName: string, args: any, request: NextRequest) {
   const { apiToken, agentKey } = extractBrainfishCredentials(request.headers);
