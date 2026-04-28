@@ -19,7 +19,9 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "license": "MIT",
   "dependencies": {
