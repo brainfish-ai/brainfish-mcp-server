@@ -1,43 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BrainfishClient, BrainfishApiError } from '../../../src/client';
 import type { BrainfishSessionData } from '../../../src/types';
-
-function extractBrainfishCredentials(request: NextRequest): { 
-  apiToken?: string; 
-  agentKey?: string; 
-} {
-  const authHeader = request.headers.get('authorization');
-  const apiKeyHeader = request.headers.get('x-brainfish-api-key') || request.headers.get('x-api-key');
-  const agentKeyHeader = request.headers.get('agent-key') || undefined;
-
-  let apiToken: string | undefined;
-  let oauthAgentKey: string | undefined;
-
-  if (apiKeyHeader) {
-    apiToken = apiKeyHeader;
-  } else if (authHeader?.toLowerCase().startsWith('bearer ')) {
-    const bearer = authHeader.slice(7).trim();
-    // Try to decode OAuth access token (base64url JSON with {token, agentKey})
-    try {
-      const decoded = JSON.parse(Buffer.from(bearer, 'base64url').toString('utf8'));
-      if (decoded?.token) {
-        apiToken = decoded.token;
-        oauthAgentKey = decoded.agentKey;
-      } else {
-        apiToken = bearer; // raw API key (Cursor / direct header usage)
-      }
-    } catch {
-      apiToken = bearer; // raw API key
-    }
-  }
-
-  return { apiToken, agentKey: agentKeyHeader ?? oauthAgentKey };
-}
-
-// realm must be a URL; resource_metadata points to RFC 9728 protected-resource doc
-// (which lists authorization_servers → Claude follows that chain to discover OAuth)
-const WWW_AUTHENTICATE =
-  'Bearer realm="https://mcp.brainfi.sh", resource_metadata="https://mcp.brainfi.sh/.well-known/oauth-protected-resource"';
+import {
+  extractBrainfishCredentials,
+  WWW_AUTHENTICATE,
+} from './lib/credentials';
 
 function createBrainfishClient(session: BrainfishSessionData): BrainfishClient {
   if (!session.apiToken) {
@@ -523,7 +490,7 @@ function redactSensitiveArgs(args: Record<string, unknown>): Record<string, unkn
 }
 
 async function handleToolCall(toolName: string, args: any, request: NextRequest) {
-  const { apiToken, agentKey } = extractBrainfishCredentials(request);
+  const { apiToken, agentKey } = extractBrainfishCredentials(request.headers);
   
   if (!apiToken) {
     throw new Error('Brainfish API token is required');
@@ -638,7 +605,7 @@ async function handleToolCall(toolName: string, args: any, request: NextRequest)
 }
 
 async function handleResourceRead(uri: string, request: NextRequest) {
-  const { apiToken, agentKey } = extractBrainfishCredentials(request);
+  const { apiToken, agentKey } = extractBrainfishCredentials(request.headers);
   if (!apiToken) {
     throw new Error('Brainfish API token is required');
   }
@@ -722,7 +689,7 @@ async function handleResourceRead(uri: string, request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   // OAuth 2.1: return 401 with discovery hint when no credentials provided
-  const { apiToken } = extractBrainfishCredentials(request);
+  const { apiToken } = extractBrainfishCredentials(request.headers);
   if (!apiToken) {
     return new NextResponse(
       JSON.stringify({ jsonrpc: '2.0', error: { code: -32001, message: 'Authentication required' } }),
