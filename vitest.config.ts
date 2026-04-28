@@ -11,7 +11,9 @@ export default defineConfig({
     },
   },
   test: {
+    setupFiles: ['./vitest.setup.ts'],
     environment: 'node',
+    environmentMatchGlobs: [['**/*.test.tsx', 'jsdom']],
     include: ['**/*.{test,spec}.{ts,tsx}'],
     exclude: ['**/node_modules/**', '**/.next/**', '**/dist/**'],
     passWithNoTests: true,

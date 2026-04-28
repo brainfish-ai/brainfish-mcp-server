@@ -250,38 +250,13 @@ describe('GET /api/mcp', () => {
     expect(json.tools).toContain('brainfish_search_documents');
   });
 
-  it('returns HTML when Accept includes text/html', async () => {
+  it('redirects to /mcp when Accept includes text/html', async () => {
     const req = new NextRequest('http://localhost/api/mcp', {
       headers: { accept: 'text/html' },
     });
     const res = await GET(req);
-    expect(res.status).toBe(200);
-    expect(res.headers.get('content-type')).toContain('text/html');
-    const html = await res.text();
-    expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('window.__BF_SESSION=false;');
-  });
-
-  it('sets __BF_SESSION true when accessToken cookie is present', async () => {
-    const req = new NextRequest('http://localhost/api/mcp', {
-      headers: {
-        accept: 'text/html',
-        cookie: 'accessToken=something',
-      },
-    });
-    const res = await GET(req);
-    const html = await res.text();
-    expect(html).toContain('window.__BF_SESSION=true;');
-  });
-
-  it('embeds BRAINFISH_APP_URL in HTML when set', async () => {
-    vi.stubEnv('BRAINFISH_APP_URL', 'https://custom-app.example');
-    const req = new NextRequest('http://localhost/api/mcp', {
-      headers: { accept: 'text/html' },
-    });
-    const res = await GET(req);
-    const html = await res.text();
-    expect(html).toContain('https://custom-app.example/auth/google');
+    expect(res.status).toBe(307);
+    expect(res.headers.get('location')).toBe('http://localhost/mcp');
   });
 });
 
