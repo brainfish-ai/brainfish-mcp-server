@@ -53,11 +53,17 @@ export async function GET(request: NextRequest) {
     compressionOptions: { level: 6 },
   });
 
-  return new NextResponse(buffer, {
+  // Buffer is not in TS's BodyInit; use a standalone ArrayBuffer (slice narrows off pool slack).
+  const arrayBuffer = buffer.buffer.slice(
+    buffer.byteOffset,
+    buffer.byteOffset + buffer.byteLength,
+  ) as ArrayBuffer;
+
+  return new NextResponse(arrayBuffer, {
     headers: {
       'Content-Type': 'application/octet-stream',
       'Content-Disposition': 'attachment; filename="brainfish.mcpb"',
-      'Content-Length': String(buffer.length),
+      'Content-Length': String(arrayBuffer.byteLength),
       'Cache-Control': 'no-store',
     },
   });
