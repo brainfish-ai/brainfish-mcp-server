@@ -1,14 +1,15 @@
+@import "tailwindcss";
+
 /* Scoped landing — import only from app/mcp */
 .bfMcpLanding {
-  --bg: #171717;
-  --surface: #262626;
-  --surface-hover: #2e2e2e;
-  --border: #333333;
-  --brand: #a3e635;
+  --bg: var(--bfc-background);
+  --surface: var(--bfc-surface);
+  --border: var(--bfc-border);
+  --brand: var(--bfc-primary);
   --brand-dim: rgba(163,230,53,.12);
-  --text: #ffffff;
-  --text-muted: #a3a3a3;
-  --text-dim: #737373;
+  --text: var(--bfc-text-default);
+  --text-muted: var(--bfc-text-subtlest);
+  --text-dim: var(--bfc-text-subtle);
   --radius: 12px;
   scroll-behavior: smooth;
 }
@@ -17,7 +18,7 @@
 }
 
 .bfMcpLanding {
-      font-family: 'Inter', -apple-system, sans-serif;
+      font-family: 'Geist', -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -771,11 +772,11 @@
 
 /* Step 2 — filled config */
 
-.bfMcpLanding .modal-step{ display: none; }
+.modal-step{ display: none; }
 
-.bfMcpLanding .modal-step.active{ display: block; }
+.modal-step.active{ display: block; }
 
-.bfMcpLanding .modal-success-badge{
+.modal-success-badge{
       display: inline-flex;
       align-items: center;
       gap: .375rem;
@@ -790,7 +791,7 @@
 
 }
 
-.bfMcpLanding .modal-config{
+.modal-config{
       border-radius: var(--radius);
       overflow: hidden;
       border: 1px solid #3c3c3c;
@@ -800,7 +801,7 @@
 
 }
 
-.bfMcpLanding .modal-config-bar{
+.modal-config-bar{
       background: #2d2d2d;
       display: flex;
       align-items: center;
@@ -810,7 +811,7 @@
 
 }
 
-.bfMcpLanding .modal-config-filename{
+.modal-config-filename{
       font-size: .75rem;
       color: #ccc;
       display: flex;
@@ -819,7 +820,7 @@
 
 }
 
-.bfMcpLanding .modal-config-copy{
+.modal-config-copy{
       font-size: .6875rem;
       font-weight: 600;
       color: rgba(255,255,255,.75);
@@ -832,18 +833,18 @@
 
 }
 
-.bfMcpLanding .modal-config-copy:hover{ background: rgba(255,255,255,.2); }
+.modal-config-copy:hover{ background: rgba(255,255,255,.2); }
 
-.bfMcpLanding .modal-config-code{
+.modal-config-code{
       background: #1e1e1e;
       padding: 1rem 1.25rem;
       overflow-x: auto;
 
 }
 
-.bfMcpLanding .modal-config-code pre{ margin: 0; color: #d4d4d4; white-space: pre; }
+.modal-config-code pre{ margin: 0; color: #d4d4d4; white-space: pre; }
 
-.bfMcpLanding .modal-restart{
+.modal-restart{
       display: block;
       text-align: center;
       font-size: .8125rem;
@@ -856,11 +857,11 @@
 
 }
 
-.bfMcpLanding .modal-restart:hover{ color: var(--text-muted); }
+.modal-restart:hover{ color: var(--text-muted); }
 
-.bfMcpLanding .mbtn + .mbtn{ margin-top: .625rem; }
+.mbtn + .mbtn{ margin-top: .625rem; }
 
-.bfMcpLanding .mbtn-google{
+.mbtn-google{
       background: #fff;
       color: #3c4043;
       font-weight: 500;
@@ -869,11 +870,11 @@
 
 }
 
-.bfMcpLanding .mbtn-google:hover{ background: #f8f8f8; opacity: 1; }
+.mbtn-google:hover{ background: #f8f8f8; opacity: 1; }
 
-.bfMcpLanding .cursor-install-btn,
-.bfMcpLanding .claude-install-btn,
-.bfMcpLanding .copy-config-btn {
+.cursor-install-btn,
+.claude-install-btn,
+.copy-config-btn {
   flex: 1;
   display: flex;
   align-items: center;
@@ -886,15 +887,15 @@
   padding: 0.6rem 0.5rem;
   cursor: pointer;
 }
-.bfMcpLanding .cursor-install-btn {
+.cursor-install-btn {
   background: #fff;
   color: #111;
 }
-.bfMcpLanding .claude-install-btn {
+.claude-install-btn {
   background: linear-gradient(135deg, #cc785c, #b5623e);
   color: #fff;
 }
-.bfMcpLanding .copy-config-btn {
+.copy-config-btn {
   flex: 0;
   background: rgba(255, 255, 255, 0.07);
   color: #fff;
@@ -902,7 +903,7 @@
   font-weight: 500;
   padding: 0.6rem 0.75rem;
 }
-.bfMcpLanding .modal-claude-hint {
+.modal-claude-hint {
   display: block;
   background: rgba(204, 120, 92, 0.12);
   border: 1px solid rgba(204, 120, 92, 0.3);
@@ -913,13 +914,13 @@
   color: #e8a98a;
   line-height: 1.6;
 }
-.bfMcpLanding .modal-claude-hint code {
+.modal-claude-hint code {
   font-family: monospace;
   background: rgba(0, 0, 0, 0.25);
   padding: 0.05rem 0.3rem;
   border-radius: 3px;
 }
-.bfMcpLanding .modal-logout-btn {
+.modal-logout-btn {
   display: block;
   margin-top: 1.25rem;
   width: 100%;
@@ -933,7 +934,7 @@
   padding: 0.6rem 0;
   transition: background 0.15s;
 }
-.bfMcpLanding .modal-logout-btn:disabled {
+.modal-logout-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
