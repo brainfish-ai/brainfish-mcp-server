@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+:root {
+      --brand-dim: rgba(163,230,53,.12);
+}
+
 /* Scoped landing — import only from app/mcp */
 .bfMcpLanding {
   --bg: var(--bfc-background);
@@ -771,10 +775,6 @@
 .bfMcpLanding .mbtn.loading .mbtn-label{ display: none; }
 
 /* Step 2 — filled config */
-
-.modal-step{ display: none; }
-
-.modal-step.active{ display: block; }
 
 .modal-success-badge{
       display: inline-flex;

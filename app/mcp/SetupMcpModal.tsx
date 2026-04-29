@@ -135,8 +135,8 @@ export function SetupMcpModal({ appUrl }: Props) {
   }
 
   const onDialogOpenChange = useCallback((open: boolean) => {
-    console.log({ open })
     if (!open) {
+      return;
     }
 
     clearModalError();
@@ -145,11 +145,10 @@ export function SetupMcpModal({ appUrl }: Props) {
   }, [clearModalError, setStep, callSetupToken]);
 
   useEffect(() => {
-    if (!open) return;
     clearModalError();
     setStep('loading');
     void callSetupToken({});
-  }, [open, callSetupToken, clearModalError]);
+  }, [callSetupToken, clearModalError]);
 
   useEffect(() => {
     const onMsg = (event: MessageEvent) => {
@@ -264,38 +263,29 @@ export function SetupMcpModal({ appUrl }: Props) {
               Setup MCP
             </DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4">
+          <div className="grid gap-4 text-default">
             {step === 'login' && (
               <div
                 id="modal-step-login"
-                className="modal-step active"
+                className="modal-step active text-center flex flex-col gap-4"
               >
-                <div style={{ textAlign: 'center', padding: '.5rem 0 1rem' }}>
-                  <div
-                    style={{
-                      width: 48,
-                      height: 48,
-                      background: 'var(--brand-dim)',
-                      borderRadius: 12,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: '1rem',
-                    }}
+                <div>
+                  <div className="size-12 rounded-full inline-flex items-center justify-center mb-4"
+                    style={{ background: 'var(--brand-dim)' }}
                   >
                     <svg
                       width="22"
                       height="22"
                       viewBox="0 0 24 24"
                       fill="none"
-                      stroke="var(--brand)"
+                      stroke="#a3e635"
                       strokeWidth="2"
                     >
                       <rect x="3" y="11" width="18" height="11" rx="2" />
                       <path d="M7 11V7a5 5 0 0110 0v4" />
                     </svg>
                   </div>
-                  <p className="modal-sub">
+                  <p className="modal-sub whitespace-nowrap">
                     Sign in to Brainfish to automatically generate your MCP config.
                   </p>
                 </div>
@@ -307,9 +297,8 @@ export function SetupMcpModal({ appUrl }: Props) {
                   {error}
                 </div>
 
-                <button
-                  type="button"
-                  className="mbtn mbtn-google"
+                <Button
+                  className="mbtn mbtn-google w-full"
                   onClick={() => openLoginPopup('google')}
                 >
                   <svg width="18" height="18" viewBox="0 0 18 18">
@@ -331,53 +320,40 @@ export function SetupMcpModal({ appUrl }: Props) {
                     />
                   </svg>
                   Continue with Google
-                </button>
+                </Button>
               </div>
             )}
             { step === 'waiting' && (
               <div
                 id="modal-step-waiting"
-                className="modal-step active"
+                className="modal-step active text-center flex flex-col gap-4"
               >
-                <div style={{ textAlign: 'center', padding: '.75rem 0 .5rem' }}>
-                  <div
+                <div className="flex flex-col gap-4">
+                  <div className="size-9 rounded-full mx-auto"
                     style={{
-                      width: 36,
-                      height: 36,
                       border: '3px solid rgba(163,230,53,.2)',
-                      borderTopColor: 'var(--brand)',
-                      borderRadius: '50%',
+                      borderTopColor: '#a3e635',
                       animation: 'spin .7s linear infinite',
-                      margin: '0 auto 1rem',
                     }}
                   />
-                  <p className="modal-sub" style={{ marginBottom: '1.5rem' }}>
+                  <p className="modal-sub">
                     A sign-in window has opened.
                     <br />
                     Complete your login there, then click below.
                   </p>
-                  <button
-                    type="button"
+                  <Button
+                    elevation="shadow"
                     className="mbtn"
-                    style={{ marginBottom: '.625rem' }}
                     onClick={doneLogin}
                   >
                     I&apos;ve signed in — create my config
-                  </button>
-                  <button
-                    type="button"
+                  </Button>
+                  <Button
+                    variant="link"
                     onClick={cancelLoginPopup}
-                    style={{
-                      fontSize: '.8125rem',
-                      color: 'var(--text-dim)',
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      width: '100%',
-                    }}
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -501,16 +477,18 @@ export function SetupMcpModal({ appUrl }: Props) {
 
           </div>
           <DialogFooter>
-            <Button
-              id="modal-logout-btn"
-              variant="secondary"
-              elevation="shadow"
-              className="w-full"
-              onClick={() => void logoutBF()}
-              disabled={logoutBusy}
-            >
-              {logoutBusy ? 'Logging out…' : 'Log out'}
-            </Button>
+            {step === 'result' && (
+              <Button
+                id="modal-logout-btn"
+                variant="secondary"
+                elevation="shadow"
+                className="w-full"
+                onClick={() => void logoutBF()}
+                disabled={logoutBusy}
+              >
+                {logoutBusy ? 'Logging out…' : 'Log out'}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </form>
