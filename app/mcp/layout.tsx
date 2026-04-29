@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
+import '@brainfish-ai/components/styles.css';
 import './mcp-landing.css';
 
 export const metadata: Metadata = {
@@ -19,7 +20,7 @@ export default function McpLayout({ children }: { children: ReactNode }) {
       <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
         rel="stylesheet"
       />
       {children}
