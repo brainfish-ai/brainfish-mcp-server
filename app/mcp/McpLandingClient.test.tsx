@@ -3,27 +3,6 @@ import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor, fireEvent, within } from '@testing-library/react';
 import { TOOLS } from '../api/mcp/lib/tools';
 import { MCP_TOOL_GROUPS } from './tool-groups';
-
-const { SetupMcpModalMock } = vi.hoisted(() => ({
-  SetupMcpModalMock: vi.fn(
-    (props: { appUrl: string; open: boolean; onClose: () => void }) => (
-      <div
-        data-testid="setup-mcp-modal"
-        data-app-url={props.appUrl}
-        data-open={String(props.open)}
-      />
-    ),
-  ),
-}));
-
-vi.mock('./SetupMcpModal', () => ({
-  SetupMcpModal: (props: {
-    appUrl: string;
-    open: boolean;
-    onClose: () => void;
-  }) => SetupMcpModalMock(props),
-}));
-
 import { McpLandingClient } from './McpLandingClient';
 
 const toolCount = Object.keys(TOOLS).length;
@@ -118,24 +97,18 @@ describe('McpLandingClient', () => {
     unmount();
   });
 
-  it('passes appUrl into SetupMcpModal and opens it from Get API Token', () => {
-    const appUrl = 'https://my-brainfish.example';
+  it('renders SetupMcpModal trigger (Get API Token) in the hero', () => {
     render(
       <McpLandingClient
         hasSession={true}
-        appUrl={appUrl}
+        appUrl="https://my-brainfish.example"
         toolCount={toolCount}
       />,
     );
 
-    const modal = screen.getByTestId('setup-mcp-modal');
-    expect(modal).toHaveAttribute('data-app-url', appUrl);
-    expect(modal).toHaveAttribute('data-open', 'false');
-
-    fireEvent.click(screen.getByRole('button', { name: /Get API Token/i }));
-
-    expect(modal).toHaveAttribute('data-open', 'true');
-    expect(SetupMcpModalMock).toHaveBeenCalled();
+    expect(
+      screen.getByRole('button', { name: /Get API Token/i }),
+    ).toBeInTheDocument();
   });
 
   it('shows Claude setup step copy including tool count', () => {
