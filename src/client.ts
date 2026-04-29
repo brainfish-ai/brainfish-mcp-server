@@ -1,6 +1,6 @@
-import type {
-  BrainfishConfig,
-  BrainfishSessionData,
+import type { 
+  BrainfishConfig, 
+  BrainfishSessionData, 
   BrainfishError,
   ApiResponse,
   Document,

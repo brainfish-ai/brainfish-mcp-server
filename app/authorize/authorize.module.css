@@ -1,0 +1,357 @@
+.root {
+  --brand: #a3e635;
+  --brand-dim: rgba(163, 230, 53, 0.12);
+  --text: #171717;
+  --text-dim: #6b7280;
+  box-sizing: border-box;
+  margin: 0;
+  min-height: 100vh;
+  font-family:
+    'Inter',
+    -apple-system,
+    sans-serif;
+  background: #f5f5f5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.root *,
+.root *::before,
+.root *::after {
+  box-sizing: border-box;
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.1);
+  max-width: 420px;
+  width: 100%;
+  padding: 2.25rem 2rem;
+}
+
+.logoWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.75rem;
+  width: 40%;
+  margin: 0 auto;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e5e5;
+  margin: 1.5rem 0;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #171717;
+  text-align: center;
+  margin: 0 0 0.375rem;
+}
+
+.subtitle {
+  font-size: 0.8125rem;
+  color: #737373;
+  text-align: center;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.subtitle strong {
+  color: #171717;
+}
+
+.scopeBox {
+  background: #f9fafb;
+  border: 1px solid #e5e5e5;
+  border-radius: 10px;
+  padding: 0.875rem 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.scopeRow {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.8125rem;
+  color: #374151;
+}
+
+.scopeRow + .scopeRow {
+  margin-top: 0.5rem;
+}
+
+.scopeIcon {
+  width: 18px;
+  height: 18px;
+  background: #a3e635;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  color: #171717;
+  font-weight: 700;
+}
+
+.btnPrimary {
+  width: 100%;
+  padding: 0.75rem;
+  background: #a3e635;
+  color: #171717;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
+  margin-bottom: 0.75rem;
+  font-family: inherit;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  opacity: 0.88;
+  transform: translateY(-1px);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnCancel {
+  display: block;
+  text-align: center;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  text-decoration: none;
+}
+
+.btnCancel:hover {
+  color: #374151;
+}
+
+.security {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e5e5;
+  font-size: 0.6875rem;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.security svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #d1d5db;
+}
+
+.modalOverlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(2px);
+  z-index: 100;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.modalOverlayOpen {
+  display: flex;
+}
+
+.modalCard {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18);
+  width: 100%;
+  max-width: 380px;
+  overflow: hidden;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.modalTitle {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #171717;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  font-size: 1.25rem;
+  line-height: 1;
+  padding: 0.125rem 0.25rem;
+}
+
+.modalClose:hover {
+  color: #374151;
+}
+
+.modalBody {
+  padding: 1.25rem;
+}
+
+.modalStep {
+  display: none;
+}
+
+.modalStepActive {
+  display: block;
+}
+
+.modalSub {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0 0 1rem;
+}
+
+.modalError {
+  font-size: 0.8125rem;
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  display: none;
+}
+
+.modalErrorVisible {
+  display: block;
+}
+
+.mbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background: #f3f4f6;
+  color: #171717;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  font-family: inherit;
+}
+
+.mbtn:hover {
+  background: #e5e7eb;
+}
+
+.mbtnGoogle {
+  background: #fff;
+  border: 1.5px solid #e5e5e5;
+}
+
+.mbtnGoogle:hover {
+  background: #f9fafb;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(163, 230, 53, 0.2);
+  border-top-color: #a3e635;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.waitingBlock {
+  text-align: center;
+  padding: 0.75rem 0 0.5rem;
+}
+
+.loadingBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+  gap: 1rem;
+}
+
+.textBtn {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  background: none;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error layout (shared with error view) */
+.errorCard {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.1);
+  max-width: 420px;
+  width: 100%;
+  padding: 2.25rem 2rem;
+  text-align: center;
+}
+
+.errorIcon {
+  width: 44px;
+  height: 44px;
+  background: #fef2f2;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+
+.errorTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #171717;
+  margin: 0 0 0.625rem;
+}
+
+.errorBody {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.errorBody code {
+  font-size: 0.8125em;
+}
