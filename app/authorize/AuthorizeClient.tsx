@@ -4,8 +4,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Logo } from '@brainfish-ai/components/logo';
 import styles from './authorize.module.css';
 
-type ModalStep = 'login' | 'waiting' | 'loading';
-
 type Props = {
   clientName: string;
   redirectUri: string;
@@ -13,29 +11,6 @@ type Props = {
   codeChallenge: string;
   appUrl: string;
 };
-
-function GoogleIcon() {
-  return (
-    <svg width={18} height={18} viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
-        fill="#4285F4"
-      />
-      <path
-        d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
-        fill="#34A853"
-      />
-      <path
-        d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"
-        fill="#FBBC05"
-      />
-      <path
-        d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"
-        fill="#EA4335"
-      />
-    </svg>
-  );
-}
 
 export function AuthorizeClient({
   clientName,
@@ -45,33 +20,15 @@ export function AuthorizeClient({
   appUrl,
 }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [step, setStep] = useState<ModalStep>('login');
   const [modalError, setModalError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const loginPopupRef = useRef<Window | null>(null);
-  const loginTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
-
-  const clearLoginTimer = useCallback(() => {
-    if (loginTimerRef.current) {
-      clearInterval(loginTimerRef.current);
-      loginTimerRef.current = null;
-    }
-  }, []);
-
-  const closePopup = useCallback(() => {
-    const w = loginPopupRef.current;
-    if (w && !w.closed) w.close();
-    loginPopupRef.current = null;
-  }, []);
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
-    clearLoginTimer();
-    closePopup();
     setBusy(false);
-  }, [clearLoginTimer, closePopup]);
+  }, []);
 
   const completeAuthorization = useCallback(
     (apiToken: string) => {
@@ -91,47 +48,6 @@ export function AuthorizeClient({
     [codeChallenge, redirectUri, state],
   );
 
-  const callSetupTokenAndFinish = useCallback(async () => {
-    try {
-      const res = await fetch('/api/setup-token', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-      const data = (await res.json()) as {
-        apiToken?: string;
-        error?: string;
-        unauthenticated?: boolean;
-      };
-      if (!res.ok || data.error) {
-        setStep('login');
-        setModalError(
-          data.unauthenticated
-            ? 'Session expired. Please sign in again.'
-            : data.error || 'Something went wrong. Please try again.',
-        );
-        return;
-      }
-      if (data.apiToken) completeAuthorization(data.apiToken);
-    } catch {
-      setStep('login');
-      setModalError('Network error. Please check your connection and try again.');
-    }
-  }, [completeAuthorization]);
-
-  useEffect(() => {
-    function onMessage(event: MessageEvent) {
-      if (!event.data || event.data.type !== 'bf:auth-complete') return;
-      clearLoginTimer();
-      closePopup();
-      setStep('loading');
-      void callSetupTokenAndFinish();
-    }
-    window.addEventListener('message', onMessage);
-    return () => window.removeEventListener('message', onMessage);
-  }, [callSetupTokenAndFinish, clearLoginTimer, closePopup]);
-
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') closeModal();
@@ -139,13 +55,6 @@ export function AuthorizeClient({
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [closeModal]);
-
-  useEffect(() => {
-    return () => {
-      clearLoginTimer();
-      closePopup();
-    };
-  }, [clearLoginTimer, closePopup]);
 
   useEffect(() => {
     if (modalOpen) document.body.style.overflow = 'hidden';
@@ -177,55 +86,15 @@ export function AuthorizeClient({
     }
     setBusy(false);
     setModalError('');
-    setStep('login');
     setModalOpen(true);
   }
 
-  function openLoginPopup(provider: 'google' | 'email') {
+  /** Full-page handoff to Platform; after login, user returns here with ?mcp_code= (see authorize/page.tsx). */
+  function startPlatformHandoff() {
     setModalError('');
-    const authUrl =
-      provider === 'email' ? `${appUrl}/auth/email` : `${appUrl}/auth/google`;
-    const w = 520;
-    const h = 640;
-    const left = Math.max(0, (screen.width - w) / 2);
-    const top = Math.max(0, (screen.height - h) / 2);
-    const popup = window.open(
-      authUrl,
-      'brainfish-login',
-      `width=${w},height=${h},left=${left},top=${top},toolbar=no,menubar=no`,
-    );
-    if (!popup) {
-      window.open(authUrl, '_blank');
-      setModalError(
-        'Popup blocked. Allow popups and try again, or log in and click "I\'ve signed in" below.',
-      );
-      return;
-    }
-    loginPopupRef.current = popup;
-    setStep('waiting');
-    loginTimerRef.current = setInterval(() => {
-      const p = loginPopupRef.current;
-      if (!p || p.closed) {
-        clearLoginTimer();
-        loginPopupRef.current = null;
-        setStep('loading');
-        void callSetupTokenAndFinish();
-      }
-    }, 500);
-  }
-
-  function doneLogin() {
-    clearLoginTimer();
-    closePopup();
-    setStep('loading');
-    void callSetupTokenAndFinish();
-  }
-
-  function cancelLoginPopup() {
-    clearLoginTimer();
-    closePopup();
-    setStep('login');
-    setModalError('');
+    const returnTo = `${window.location.origin}${window.location.pathname}${window.location.search}`;
+    const url = `${appUrl.replace(/\/$/, '')}/api/mcp.connect?return_to=${encodeURIComponent(returnTo)}`;
+    window.location.assign(url);
   }
 
   function onOverlayPointerDown(e: React.MouseEvent) {
@@ -302,52 +171,17 @@ export function AuthorizeClient({
             </button>
           </div>
           <div className={styles.modalBody}>
-            <div
-              id="modal-step-login"
-              className={`${styles.modalStep} ${step === 'login' ? styles.modalStepActive : ''}`}
-            >
-              <p className={styles.modalSub}>Sign in to complete the authorization.</p>
+            <div id="modal-step-login" className={`${styles.modalStep} ${styles.modalStepActive}`}>
+              <p className={styles.modalSub}>
+                You will be redirected to Brainfish to sign in (Google, email, or SSO). After signing in,
+                you will return here to finish connecting.
+              </p>
               <div className={`${styles.modalError} ${modalError ? styles.modalErrorVisible : ''}`}>
                 {modalError}
               </div>
-              <button
-                type="button"
-                className={`${styles.mbtn} ${styles.mbtnGoogle}`}
-                onClick={() => openLoginPopup('google')}
-              >
-                <GoogleIcon />
-                Continue with Google
+              <button type="button" className={styles.mbtn} onClick={startPlatformHandoff}>
+                Continue to sign in
               </button>
-            </div>
-            <div
-              id="modal-step-waiting"
-              className={`${styles.modalStep} ${step === 'waiting' ? styles.modalStepActive : ''}`}
-            >
-              <div className={styles.waitingBlock}>
-                <div className={styles.spinner} />
-                <p className={styles.modalSub}>
-                  A sign-in window has opened.
-                  <br />
-                  Complete your login there, then click below.
-                </p>
-                <button type="button" className={styles.mbtn} onClick={doneLogin} style={{ marginBottom: '0.5rem' }}>
-                  I&apos;ve signed in — continue
-                </button>
-                <button type="button" className={styles.textBtn} onClick={cancelLoginPopup}>
-                  Cancel
-                </button>
-              </div>
-            </div>
-            <div
-              id="modal-step-loading"
-              className={`${styles.modalStep} ${step === 'loading' ? styles.modalStepActive : ''}`}
-            >
-              <div className={styles.loadingBlock}>
-                <div className={styles.spinner} />
-                <p className={`${styles.modalSub}`} style={{ margin: 0, textAlign: 'center' }}>
-                  Completing authorization…
-                </p>
-              </div>
             </div>
           </div>
         </div>
