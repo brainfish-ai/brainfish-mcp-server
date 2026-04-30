@@ -21,13 +21,16 @@ type ModalStep = 'loading' | 'login' | 'waiting' | 'result';
 
 type Props = {
   appUrl: string;
+  /** Set when user returns from platform `/api/mcp.connect` with `?mcp_code=` */
+  handoffCode?: string;
 };
 
-export function SetupMcpModal({ appUrl }: Props) {
+export function SetupMcpModal({ appUrl, handoffCode = '' }: Props) {
   const [step, setStep] = useState<ModalStep>('loading');
   const [error, setError] = useState('');
   const loginPopupRef = useRef<Window | null>(null);
   const loginTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const handoffStartedRef = useRef(false);
   const [claudeHintVisible, setClaudeHintVisible] = useState(false);
   const [copyBtnLabel, setCopyBtnLabel] = useState('Copy');
   const [logoutBusy, setLogoutBusy] = useState(false);
@@ -54,7 +57,7 @@ export function SetupMcpModal({ appUrl }: Props) {
   }, [stopLoginTimer]);
 
   const callSetupToken = useCallback(
-    async (body: Record<string, unknown>) => {
+    async (body: Record<string, unknown>): Promise<boolean> => {
       try {
         const res = await fetch('/api/setup-token', {
           method: 'POST',
@@ -75,18 +78,20 @@ export function SetupMcpModal({ appUrl }: Props) {
               data.error || 'Something went wrong. Please try again.',
             );
           }
-          return;
+          return false;
         }
         setStep('result');
         window.requestAnimationFrame(() => {
           const token = (data.apiToken as string) || '';
           populateConfigUi(token);
         });
+        return true;
       } catch {
         setStep('login');
         showModalError(
           'Network error. Please check your connection and try again.',
         );
+        return false;
       }
     },
     [showModalError],
@@ -134,21 +139,32 @@ export function SetupMcpModal({ appUrl }: Props) {
     }
   }
 
-  const onDialogOpenChange = useCallback((open: boolean) => {
-    if (!open) {
-      return;
-    }
-
-    clearModalError();
-    setStep('loading');
-    void callSetupToken({});
-  }, [clearModalError, setStep, callSetupToken]);
+  const onDialogOpenChange = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        return;
+      }
+      clearModalError();
+      setStep('loading');
+      void callSetupToken({});
+    },
+    [clearModalError, callSetupToken],
+  );
 
   useEffect(() => {
+    if (!handoffCode || handoffStartedRef.current) {
+      return;
+    }
+    handoffStartedRef.current = true;
     clearModalError();
     setStep('loading');
-    void callSetupToken({});
-  }, [callSetupToken, clearModalError]);
+    void (async () => {
+      const ok = await callSetupToken({ mcpCode: handoffCode });
+      if (ok && typeof window !== 'undefined') {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    })();
+  }, [handoffCode, callSetupToken, clearModalError]);
 
   useEffect(() => {
     const onMsg = (event: MessageEvent) => {
@@ -161,6 +177,13 @@ export function SetupMcpModal({ appUrl }: Props) {
     window.addEventListener('message', onMsg);
     return () => window.removeEventListener('message', onMsg);
   }, [callSetupToken, closePopup, stopLoginTimer]);
+
+  function startBrainfishHandoff() {
+    clearModalError();
+    const returnTo = `${window.location.origin}${window.location.pathname || '/mcp'}`;
+    const url = `${appUrl}/api/mcp.connect?return_to=${encodeURIComponent(returnTo)}`;
+    window.location.assign(url);
+  }
 
   function openLoginPopup(provider: 'google' | 'email') {
     clearModalError();
@@ -250,7 +273,7 @@ export function SetupMcpModal({ appUrl }: Props) {
   }
 
   return (
-    <Dialog onOpenChange={onDialogOpenChange}>
+    <Dialog defaultOpen={!!handoffCode} onOpenChange={onDialogOpenChange}>
       <form>
         <DialogTrigger asChild>
           <Button size="lg" elevation="shadow">
@@ -264,6 +287,19 @@ export function SetupMcpModal({ appUrl }: Props) {
             </DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 text-default">
+            {step === 'loading' && (
+              <div className="modal-step active text-center flex flex-col gap-4 py-6">
+                <div
+                  className="size-9 rounded-full mx-auto"
+                  style={{
+                    border: '3px solid rgba(163,230,53,.2)',
+                    borderTopColor: '#a3e635',
+                    animation: 'spin .7s linear infinite',
+                  }}
+                />
+                <p className="modal-sub">Preparing your MCP config…</p>
+              </div>
+            )}
             {step === 'login' && (
               <div
                 id="modal-step-login"
@@ -285,8 +321,10 @@ export function SetupMcpModal({ appUrl }: Props) {
                       <path d="M7 11V7a5 5 0 0110 0v4" />
                     </svg>
                   </div>
-                  <p className="modal-sub whitespace-nowrap">
-                    Sign in to Brainfish to automatically generate your MCP config.
+                  <p className="modal-sub">
+                    Sign in on Brainfish (opens this page in the same tab). If
+                    you&apos;re already signed in there, you&apos;ll come right
+                    back with your MCP config.
                   </p>
                 </div>
 
@@ -298,28 +336,19 @@ export function SetupMcpModal({ appUrl }: Props) {
                 </div>
 
                 <Button
-                  className="mbtn mbtn-google w-full"
+                  elevation="shadow"
+                  className="mbtn w-full"
+                  onClick={() => startBrainfishHandoff()}
+                >
+                  Continue in Brainfish
+                </Button>
+
+                <Button
+                  variant="link"
+                  className="text-sm"
                   onClick={() => openLoginPopup('google')}
                 >
-                  <svg width="18" height="18" viewBox="0 0 18 18">
-                    <path
-                      d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957C.347 6.175 0 7.55 0 9s.348 2.825.957 4.039l3.007-2.332z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Continue with Google
+                  Sign in with Google in a popup instead
                 </Button>
               </div>
             )}
