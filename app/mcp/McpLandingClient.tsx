@@ -12,9 +12,15 @@ type Props = {
   hasSession: boolean;
   appUrl: string;
   toolCount: number;
+  handoffCode?: string;
 };
 
-export function McpLandingClient({ hasSession, appUrl, toolCount }: Props) {
+export function McpLandingClient({
+  hasSession,
+  appUrl,
+  toolCount,
+  handoffCode = '',
+}: Props) {
   const [setupTab, setSetupTab] = useState<'cursor' | 'claude'>('cursor');
   const [copyHint, setCopyHint] = useState('click to copy');
 
@@ -94,7 +100,7 @@ export function McpLandingClient({ hasSession, appUrl, toolCount }: Props) {
           <span className="copy-hint">{copyHint}</span>
         </div>
         <div className="hero-actions">
-          <SetupMcpModal appUrl={appUrl} />
+          <SetupMcpModal appUrl={appUrl} handoffCode={handoffCode} />
           <Button size="lg" elevation="shadow" variant="outline" asChild>
             <a
               className="btn btn-secondary"

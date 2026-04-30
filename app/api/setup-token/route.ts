@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { verifyMcpCode } from '../../authorize/verify-mcp-code';
 
 const PLATFORM_API = process.env.BRAINFISH_API_URL || 'https://api.brainfi.sh';
 const MCP_KEY_NAME = 'Brainfish MCP';
@@ -6,6 +7,26 @@ const MCP_KEY_NAME = 'Brainfish MCP';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json().catch(() => ({})) as Record<string, unknown>;
+    const mcpCode = ((body.mcpCode as string) ?? '').trim();
+    if (mcpCode) {
+      const exchangeSecret = process.env.MCP_EXCHANGE_SECRET ?? '';
+      if (!exchangeSecret) {
+        return NextResponse.json(
+          { error: 'MCP_EXCHANGE_SECRET is not configured on this server.' },
+          { status: 500 },
+        );
+      }
+      try {
+        const { apiToken } = await verifyMcpCode(mcpCode, exchangeSecret);
+        return NextResponse.json({ apiToken });
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid or expired handoff code. Please try again.', unauthenticated: true },
+          { status: 401 },
+        );
+      }
+    }
+
     const explicitKey = ((body.apiKey as string) ?? '').trim();
     const sessionToken = request.cookies.get('accessToken')?.value ?? '';
 
