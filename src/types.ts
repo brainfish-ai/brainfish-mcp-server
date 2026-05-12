@@ -116,7 +116,7 @@ export interface SearchResult {
 }
 
 export interface StreamingEvent {
-  type: 'start' | 'progress' | 'content' | 'end';
+  type: 'start' | 'progress' | 'content' | 'end' | 'conversation-id' | 'answer-text-chunk' | 'citations';
   id?: string;
   conversationId?: string;
   content?: string;
