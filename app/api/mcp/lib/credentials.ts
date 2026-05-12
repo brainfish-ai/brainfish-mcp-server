@@ -5,15 +5,12 @@ export const WWW_AUTHENTICATE =
 
 export function extractBrainfishCredentials(headers: Headers): {
   apiToken?: string;
-  agentKey?: string;
 } {
   const authHeader = headers.get('authorization');
   const apiKeyHeader =
     headers.get('x-brainfish-api-key') || headers.get('x-api-key');
-  const agentKeyHeader = headers.get('agent-key') || undefined;
 
   let apiToken: string | undefined;
-  let oauthAgentKey: string | undefined;
 
   if (apiKeyHeader) {
     apiToken = apiKeyHeader;
@@ -25,7 +22,6 @@ export function extractBrainfishCredentials(headers: Headers): {
       );
       if (decoded?.token) {
         apiToken = decoded.token;
-        oauthAgentKey = decoded.agentKey;
       } else {
         apiToken = bearer;
       }
@@ -34,5 +30,5 @@ export function extractBrainfishCredentials(headers: Headers): {
     }
   }
 
-  return { apiToken, agentKey: agentKeyHeader ?? oauthAgentKey };
+  return apiToken ? { apiToken } : {};
 }

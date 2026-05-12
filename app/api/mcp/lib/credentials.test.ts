@@ -22,7 +22,6 @@ describe('extractBrainfishCredentials', () => {
     const h = new Headers({ 'x-brainfish-api-key': 'bf_header' });
     expect(extractBrainfishCredentials(h)).toEqual({
       apiToken: 'bf_header',
-      agentKey: undefined,
     });
   });
 
@@ -30,7 +29,6 @@ describe('extractBrainfishCredentials', () => {
     const h = new Headers({ 'x-api-key': 'bf_legacy' });
     expect(extractBrainfishCredentials(h)).toEqual({
       apiToken: 'bf_legacy',
-      agentKey: undefined,
     });
   });
 
@@ -45,30 +43,19 @@ describe('extractBrainfishCredentials', () => {
   it('prefers explicit API key headers over Authorization bearer', () => {
     const h = new Headers({
       'x-brainfish-api-key': 'from_header',
-      authorization: `Bearer ${oauthBearer({ token: 'from_oauth', agentKey: 'ag' })}`,
+      authorization: `Bearer ${oauthBearer({ token: 'from_oauth' })}`,
     });
     expect(extractBrainfishCredentials(h)).toEqual({
       apiToken: 'from_header',
-      agentKey: undefined,
     });
   });
 
   it('parses OAuth-style bearer (base64url JSON with token)', () => {
-    const bearer = oauthBearer({ token: 'tok', agentKey: 'agent_from_oauth' });
+    const bearer = oauthBearer({ token: 'tok' });
     const h = new Headers({ authorization: `Bearer ${bearer}` });
     expect(extractBrainfishCredentials(h)).toEqual({
       apiToken: 'tok',
-      agentKey: 'agent_from_oauth',
     });
-  });
-
-  it('uses agent-key header over oauth agentKey', () => {
-    const bearer = oauthBearer({ token: 'tok', agentKey: 'oauth_agent' });
-    const h = new Headers({
-      authorization: `Bearer ${bearer}`,
-      'agent-key': 'header_agent',
-    });
-    expect(extractBrainfishCredentials(h).agentKey).toBe('header_agent');
   });
 
   it('accepts case-insensitive Bearer scheme', () => {

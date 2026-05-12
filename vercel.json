@@ -26,7 +26,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, agent-key, x-brainfish-api-key, x-api-key"
+          "value": "Content-Type, Authorization, x-brainfish-api-key, x-api-key"
         }
       ]
     }

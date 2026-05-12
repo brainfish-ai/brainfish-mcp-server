@@ -1,6 +1,5 @@
 export interface BrainfishSessionData {
   apiToken?: string;
-  agentKey?: string;
   [key: string]: unknown;
 }
 
@@ -75,6 +74,11 @@ export interface DocumentListItem {
   hasPendingSuggestion: boolean;
 }
 
+export interface MoveDocumentResult {
+  documents: Document[];
+  collections: Collection[];
+}
+
 export interface UserSummary {
   id?: string;
   name?: string;
@@ -117,6 +121,17 @@ export interface StreamingEvent {
   conversationId?: string;
   content?: string;
   complete?: boolean;
+}
+
+export interface UserAnswerRequest {
+  query: string;
+  conversationId?: string;
+  stream?: boolean;
+  collectionIds?: string[];
+  attachments?: Array<{
+    type: 'image';
+    url: string;
+  }>;
 }
 
 export interface PaginationInfo {

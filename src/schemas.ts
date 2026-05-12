@@ -56,6 +56,13 @@ export const updateDocumentSchema = z.object({
   siteEnabled: z.boolean().optional()
 });
 
+export const moveDocumentSchema = z.object({
+  id: z.string().uuid(),
+  collectionId: z.string().uuid(),
+  parentDocumentId: z.string().uuid().nullable().optional(),
+  index: z.number().int().min(0).optional()
+});
+
 export const deleteDocumentSchema = z.object({
   id: z.string().min(1),
   permanent: z.boolean().optional().default(false)
@@ -116,4 +123,15 @@ export const getAnalyticsThreadsSchema = z.object({
 export const generateAnswerSchema = z.object({
   query: z.string().min(1).max(2000),
   conversationId: z.string().regex(/^[0-9a-z]{25}$/).optional()
+});
+
+export const generateUserAnswerSchema = z.object({
+  query: z.string().min(1).max(2000),
+  conversationId: z.string().regex(/^[0-9a-z]{25}$/).optional(),
+  stream: z.boolean().optional().default(true),
+  collectionIds: z.array(z.string().uuid()).optional(),
+  attachments: z.array(z.object({
+    type: z.literal('image'),
+    url: z.string().url()
+  })).max(10).optional()
 });

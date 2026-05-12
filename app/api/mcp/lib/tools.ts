@@ -28,15 +28,34 @@ export const TOOLS = {
       required: ['id']
     }
   },
-  brainfish_generate_answer: {
-    name: 'brainfish_generate_answer',
-    description: 'Generate streaming AI-powered answers from your knowledge base',
+  brainfish_generate_user_answer: {
+    name: 'brainfish_generate_user_answer',
+    description: 'Generate streaming AI-powered answers, optionally scoped to specific collections',
     annotations: { readOnlyHint: true, destructiveHint: false },
     inputSchema: {
       type: 'object',
       properties: {
         query: { type: 'string', minLength: 1, maxLength: 2000 },
-        conversationId: { type: 'string', pattern: '^[0-9a-z]{25}$' }
+        conversationId: { type: 'string', pattern: '^[0-9a-z]{25}$' },
+        stream: { type: 'boolean', default: true },
+        collectionIds: {
+          type: 'array',
+          items: { type: 'string', format: 'uuid' },
+          description: 'Optional collection IDs to restrict which collections are searched'
+        },
+        attachments: {
+          type: 'array',
+          maxItems: 10,
+          description: 'Optional image attachments',
+          items: {
+            type: 'object',
+            properties: {
+              type: { type: 'string', enum: ['image'] },
+              url: { type: 'string', format: 'uri' }
+            },
+            required: ['type', 'url']
+          }
+        }
       },
       required: ['query']
     }
@@ -181,6 +200,30 @@ export const TOOLS = {
         siteEnabled: { type: 'boolean', description: 'Make document public on site' }
       },
       required: ['id']
+    }
+  },
+  brainfish_move_document: {
+    name: 'brainfish_move_document',
+    description: 'Move a document and its children to another collection, optionally under a parent document or at a specific sibling index',
+    annotations: { readOnlyHint: false, destructiveHint: false },
+    inputSchema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string', format: 'uuid', description: 'Document UUID to move' },
+        collectionId: { type: 'string', format: 'uuid', description: 'Target collection ID' },
+        parentDocumentId: {
+          type: 'string',
+          format: 'uuid',
+          nullable: true,
+          description: 'Optional parent document ID within the target collection'
+        },
+        index: {
+          type: 'integer',
+          minimum: 0,
+          description: 'Position index among siblings (0-based). Omit to place at the end.'
+        }
+      },
+      required: ['id', 'collectionId']
     }
   },
   brainfish_delete_document: {

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'invalid_request', error_description: 'code is required' }, { status: 400, headers: CORS });
   }
 
-  let payload: { token: string; agentKey?: string; challenge: string; exp: number };
+  let payload: { token: string; challenge: string; exp: number };
   try {
     payload = JSON.parse(Buffer.from(code, 'base64url').toString('utf8'));
   } catch {
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   }
 
   // Encode Brainfish credentials into the access token (Bearer value)
-  const tokenData = { token: payload.token, ...(payload.agentKey && { agentKey: payload.agentKey }) };
+  const tokenData = { token: payload.token };
   const accessToken = Buffer.from(JSON.stringify(tokenData)).toString('base64url');
 
   return NextResponse.json({
