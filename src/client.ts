@@ -461,11 +461,13 @@ export class BrainfishClient {
               
               switch (event.type) {
                 case 'start':
+                case 'conversation-id':
                   if (event.conversationId) {
                     conversationId = event.conversationId;
                   }
                   break;
                 case 'content':
+                case 'answer-text-chunk':
                   if (event.content) {
                     fullAnswer += event.content;
                   }
