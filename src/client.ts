@@ -418,7 +418,22 @@ export class BrainfishClient {
       );
     }
 
+    if (params.stream === false) {
+      return this.handleJsonAnswerResponse(response);
+    }
+
     return this.handleStreamingResponse(response);
+  }
+
+  private async handleJsonAnswerResponse(response: Response): Promise<string> {
+    const result = await response.json() as {
+      data?: {
+        answer?: string;
+      };
+      answer?: string;
+    };
+
+    return result.data?.answer ?? result.answer ?? JSON.stringify(result, null, 2);
   }
 
   private async handleStreamingResponse(response: any): Promise<string> {
