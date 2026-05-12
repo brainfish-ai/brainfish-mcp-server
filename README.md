@@ -30,8 +30,7 @@ Go to **Settings → Features → MCP Servers → Add new global MCP server**:
     "brainfish": {
       "url": "https://mcp.brainfi.sh",
       "headers": {
-        "Authorization": "Bearer bf_api_YOUR_TOKEN",
-        "agent-key": "YOUR_AGENT_KEY"
+        "Authorization": "Bearer bf_api_YOUR_TOKEN"
       }
     }
   }
@@ -48,8 +47,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
     "brainfish": {
       "url": "https://mcp.brainfi.sh",
       "headers": {
-        "Authorization": "Bearer bf_api_YOUR_TOKEN",
-        "agent-key": "YOUR_AGENT_KEY"
+        "Authorization": "Bearer bf_api_YOUR_TOKEN"
       }
     }
   }
@@ -68,8 +66,7 @@ Add to your User Settings (JSON):
         "type": "http",
         "url": "https://mcp.brainfi.sh",
         "headers": {
-          "Authorization": "Bearer bf_api_YOUR_TOKEN",
-          "agent-key": "YOUR_AGENT_KEY"
+          "Authorization": "Bearer bf_api_YOUR_TOKEN"
         }
       }
     }
@@ -84,9 +81,6 @@ Add to your User Settings (JSON):
 | Credential | Where to find it |
 |---|---|
 | `bf_api_YOUR_TOKEN` | [Brainfish Dashboard](https://app.brainfi.sh) → Settings → API Tokens |
-| `YOUR_AGENT_KEY` | [Brainfish Dashboard](https://app.brainfi.sh) → Agents → click any agent to copy its key |
-
-> **`agent-key` is only required** for AI answer tools (`brainfish_generate_answer`, `brainfish_generate_follow_ups`). All other tools work with the API token alone.
 
 ---
 
@@ -119,7 +113,7 @@ Authorization: Bearer bf_api_YOUR_TOKEN
 
 ---
 
-## Available Tools (23)
+## Available Tools (24)
 
 ### Search & Documents
 
@@ -130,6 +124,7 @@ Authorization: Bearer bf_api_YOUR_TOKEN
 | `brainfish_list_documents` | List documents with filtering and pagination |
 | `brainfish_create_document` | Create a new document in a collection |
 | `brainfish_update_document` | Update title, content, or publish status |
+| `brainfish_move_document` | Move a document to another collection or parent document |
 | `brainfish_delete_document` | Soft-delete (or permanently delete) a document |
 
 ### Suggestions
@@ -152,8 +147,8 @@ Authorization: Bearer bf_api_YOUR_TOKEN
 
 | Tool | Description |
 |---|---|
-| `brainfish_generate_answer` | Generate an AI answer from your knowledge base (requires agent-key) |
-| `brainfish_generate_follow_ups` | Generate follow-up questions for a conversation (requires agent-key) |
+| `brainfish_generate_user_answer` | Generate an AI answer, optionally scoped to specific collections |
+| `brainfish_generate_follow_ups` | Generate follow-up questions for a conversation |
 
 ### Catalogs
 
@@ -261,9 +256,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
         "mcp-remote",
         "http://localhost:3000/api/mcp",
         "--header",
-        "Authorization:Bearer bf_api_YOUR_TOKEN",
-        "--header",
-        "agent-key:YOUR_AGENT_KEY"
+        "Authorization:Bearer bf_api_YOUR_TOKEN"
       ]
     }
   }

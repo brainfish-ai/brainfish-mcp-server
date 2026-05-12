@@ -17,7 +17,9 @@ import type {
   TimelineEvent,
   SessionInsights,
   SearchSessionsRequest,
-  AnalyticsThreadsResponse
+  AnalyticsThreadsResponse,
+  MoveDocumentResult,
+  UserAnswerRequest
 } from './types.js';
 
 export class BrainfishClient {
@@ -41,17 +43,12 @@ export class BrainfishClient {
       method?: string;
       body?: unknown;
       headers?: Record<string, string>;
-      requiresAgentKey?: boolean;
     } = {}
   ): Promise<T> {
-    const { method = 'GET', body, headers = {}, requiresAgentKey = false } = options;
+    const { method = 'GET', body, headers = {} } = options;
 
     if (!this.session.apiToken) {
       throw new Error('Brainfish API token is required');
-    }
-
-    if (requiresAgentKey && !this.session.agentKey) {
-      throw new Error('Agent key is required for this endpoint');
     }
 
     const requestHeaders: Record<string, string> = {
@@ -59,10 +56,6 @@ export class BrainfishClient {
       'Content-Type': 'application/json',
       ...headers
     };
-
-    if (requiresAgentKey && this.session.agentKey) {
-      requestHeaders['agent-key'] = this.session.agentKey;
-    }
 
     const url = `${this.config.baseUrl}${endpoint}`;
     
@@ -199,6 +192,17 @@ export class BrainfishClient {
     });
   }
 
+  async moveDocument(id: string, params: {
+    collectionId: string;
+    parentDocumentId?: string | null;
+    index?: number;
+  }): Promise<ApiResponse<MoveDocumentResult>> {
+    return this.request(`/v1/documents/${encodeURIComponent(id)}/move`, {
+      method: 'POST',
+      body: params
+    });
+  }
+
   // Collections
   async listCollections(params: {
     sortBy?: 'updatedAt' | 'index' | 'name';
@@ -304,8 +308,7 @@ export class BrainfishClient {
   async generateFollowUpQuestions(conversationId: string, limit?: number): Promise<ApiResponse<{ followUps: string[] }>> {
     return this.request(`/v1/conversations/${encodeURIComponent(conversationId)}/follow-ups`, {
       method: 'POST',
-      body: limit !== undefined ? { limit } : {},
-      requiresAgentKey: true
+      body: limit !== undefined ? { limit } : {}
     });
   }
 
@@ -394,16 +397,12 @@ export class BrainfishClient {
     });
   }
 
-  // AI Agents - Streaming
-  async generateAnswer(params: {
-    query: string;
-    conversationId?: string;
-  }): Promise<string> {
-    const response = await fetch(`${this.config.baseUrl}/v1/agents/answer`, {
+  // User Answers - Streaming
+  async generateUserAnswer(params: UserAnswerRequest): Promise<string> {
+    const response = await fetch(`${this.config.baseUrl}/v1/users/answer`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${this.session.apiToken}`,
-        'agent-key': this.session.agentKey!,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(params)

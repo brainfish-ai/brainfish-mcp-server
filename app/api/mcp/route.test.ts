@@ -271,7 +271,7 @@ describe('OPTIONS /api/mcp', () => {
       'GET, POST, OPTIONS',
     );
     expect(res.headers.get('Access-Control-Allow-Headers')).toBe(
-      'Content-Type, Authorization, agent-key, x-brainfish-api-key, x-api-key',
+      'Content-Type, Authorization, x-brainfish-api-key, x-api-key',
     );
   });
 });

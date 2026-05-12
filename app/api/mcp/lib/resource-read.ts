@@ -6,11 +6,11 @@ export async function handleResourceRead(
   uri: string,
   request: NextRequest,
 ) {
-  const { apiToken, agentKey } = extractBrainfishCredentials(request.headers);
+  const { apiToken } = extractBrainfishCredentials(request.headers);
   if (!apiToken) {
     throw new Error('Brainfish API token is required');
   }
-  const client = createBrainfishClient({ apiToken, agentKey });
+  const client = createBrainfishClient({ apiToken });
 
   if (uri === 'brainfish://collections') {
     const result = await client.listCollections();

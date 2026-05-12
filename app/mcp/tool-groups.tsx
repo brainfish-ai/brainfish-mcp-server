@@ -36,6 +36,7 @@ export const MCP_TOOL_GROUPS: ToolGroupDef[] = [
       'brainfish_list_documents',
       'brainfish_create_document',
       'brainfish_update_document',
+      'brainfish_move_document',
       'brainfish_delete_document',
     ],
   },
@@ -67,7 +68,7 @@ export const MCP_TOOL_GROUPS: ToolGroupDef[] = [
     icon: icon(
       <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />,
     ),
-    tools: ['brainfish_generate_answer', 'brainfish_generate_follow_ups'],
+    tools: ['brainfish_generate_user_answer', 'brainfish_generate_follow_ups'],
   },
   {
     name: 'Catalogs',

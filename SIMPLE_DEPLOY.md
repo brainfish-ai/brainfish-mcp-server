@@ -23,8 +23,7 @@ Users create `.cursor/mcp.json`:
     "brainfish": {
       "url": "https://your-project.vercel.app/api/mcp",
       "headers": {
-        "Authorization": "Bearer bf_api_their_token_here",
-        "agent-key": "their_agent_key_here"
+        "Authorization": "Bearer bf_api_their_token_here"
       }
     }
   }
@@ -42,7 +41,7 @@ Users add to `claude_desktop_config.json`:
       "args": ["-y", "@modelcontextprotocol/server-fetch"],
       "env": {
         "FETCH_URL": "https://your-project.vercel.app/api/mcp",
-        "FETCH_HEADERS": "{\"Authorization\": \"Bearer bf_api_their_token\", \"agent-key\": \"their_agent_key\"}"
+        "FETCH_HEADERS": "{\"Authorization\": \"Bearer bf_api_their_token\"}"
       }
     }
   }
@@ -67,8 +66,6 @@ Authorization: Bearer bf_api_token
 x-brainfish-api-key: bf_api_token
 x-api-key: bf_api_token
 
-// Agent key for AI features
-agent-key: agent_key_value
 ```
 
 ### 3. Per-Request Authentication
@@ -101,7 +98,6 @@ agent-key: agent_key_value
 ### Step 1: Get Brainfish Credentials
 1. Go to [Brainfish Dashboard](https://app.brainfi.sh)
 2. **API Token**: Settings → API Tokens → Create New Token
-3. **Agent Key**: Agents → Copy agent key (optional, for AI features)
 
 ### Step 2: Use Any Deployed Server
 Users can use any deployed Brainfish MCP server:
@@ -144,8 +140,7 @@ Add to your MCP client with your own Brainfish credentials:
     "brainfish": {
       "url": "https://brainfish-mcp-public.vercel.app/api/mcp",
       "headers": {
-        "Authorization": "Bearer YOUR_BRAINFISH_TOKEN",
-        "agent-key": "YOUR_AGENT_KEY"
+        "Authorization": "Bearer YOUR_BRAINFISH_TOKEN"
       }
     }
   }

@@ -7,13 +7,13 @@ export async function handleToolCall(
   args: any,
   request: NextRequest,
 ) {
-  const { apiToken, agentKey } = extractBrainfishCredentials(request.headers);
+  const { apiToken } = extractBrainfishCredentials(request.headers);
 
   if (!apiToken) {
     throw new Error('Brainfish API token is required');
   }
 
-  const client = createBrainfishClient({ apiToken, agentKey });
+  const client = createBrainfishClient({ apiToken });
 
   switch (toolName) {
     case 'brainfish_search_documents':
@@ -22,13 +22,8 @@ export async function handleToolCall(
     case 'brainfish_get_document':
       return await client.getDocument(args.id);
 
-    case 'brainfish_generate_answer':
-      if (!agentKey) {
-        throw new Error(
-          'Agent key is required for AI answer generation. Find your agent key in the Brainfish dashboard under Agents.',
-        );
-      }
-      return await client.generateAnswer(args);
+    case 'brainfish_generate_user_answer':
+      return await client.generateUserAnswer(args);
 
     case 'brainfish_list_collections':
       return await client.listCollections(args);
@@ -65,6 +60,11 @@ export async function handleToolCall(
       return await client.updateDocument(docId, docUpdateParams);
     }
 
+    case 'brainfish_move_document': {
+      const { id: moveDocId, ...moveDocumentParams } = args;
+      return await client.moveDocument(moveDocId, moveDocumentParams);
+    }
+
     case 'brainfish_delete_document':
       return await client.deleteDocument(args.id, args.permanent ?? false);
 
@@ -72,11 +72,6 @@ export async function handleToolCall(
       return await client.generateArticleSuggestion(args);
 
     case 'brainfish_generate_follow_ups':
-      if (!agentKey) {
-        throw new Error(
-          'Agent key is required for follow-up generation. Find your agent key in the Brainfish dashboard under Agents.',
-        );
-      }
       return await client.generateFollowUpQuestions(
         args.conversationId,
         args.limit,

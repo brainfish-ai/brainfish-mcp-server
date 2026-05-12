@@ -158,7 +158,7 @@ export function McpLandingClient({
               </div>
               <div className="monaco-body">
                 <div className="monaco-gutter">
-                  {Array.from({ length: 11 }, (_, i) => (
+                  {Array.from({ length: 9 }, (_, i) => (
                     <span key={i} className={i === 0 ? 'active' : undefined}>
                       {i + 1}
                     </span>
@@ -194,14 +194,6 @@ export function McpLandingClient({
                     <span className="tok-str">
                       &quot;Bearer bf_api_YOUR_TOKEN&quot;
                     </span>
-                    <span className="tok-brace">,</span>
-                    {'\n'}
-                    {'        '}
-                    <span className="tok-key">&quot;agent-key&quot;</span>
-                    <span className="tok-brace">: </span>
-                    <span className="tok-str">&quot;YOUR_AGENT_KEY&quot;</span>
-                    {'  '}
-                    <span className="tok-comment">// optional</span>
                     {'\n'}
                     {'      '}
                     <span className="tok-brace">{'}'}</span>
@@ -285,13 +277,6 @@ export function McpLandingClient({
                         <span className="url-token">bf_api_YOUR_TOKEN</span>
                       </code>
                       <span className="url-copy claude-url-copy">copy</span>
-                    </div>
-                    <div className="step-desc" style={{ marginTop: '.5rem' }}>
-                      Optionally append{' '}
-                      <code className="inline-code">
-                        &amp;agent-key=YOUR_AGENT_KEY
-                      </code>{' '}
-                      if using AI Answers.
                     </div>
                   </div>
                 </div>
